@@ -18,6 +18,7 @@ export const runTask = (id) => post(`/api/tasks/${id}/run`)
 
 // 舆情数据
 export const getSentimentList = (params) => get("/api/sentiment", params)
+export const getSentimentStats = () => get("/api/sentiment/stats")
 
 // 智能报告
 export const generateReport = (data) => post("/api/report/generate", data)

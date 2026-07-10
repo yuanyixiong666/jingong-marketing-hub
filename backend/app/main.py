@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
-from app.routers import platform_data, competitor, crawl_task
+from app.routers import platform_data, competitor, crawl_task, sentiment, report
 
 
 @asynccontextmanager
@@ -38,6 +38,8 @@ app.add_middleware(
 app.include_router(platform_data.router)
 app.include_router(competitor.router)
 app.include_router(crawl_task.router)
+app.include_router(sentiment.router)
+app.include_router(report.router)
 
 
 @app.get("/api/health")
