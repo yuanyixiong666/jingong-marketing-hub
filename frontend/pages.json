@@ -1,0 +1,24 @@
+{
+  "pages": [
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "数据中台" } },
+    { "path": "pages/dashboard/dashboard", "style": { "navigationBarTitleText": "营销战情室" } },
+    { "path": "pages/crawler/crawler", "style": { "navigationBarTitleText": "数据采集" } },
+    { "path": "pages/report/report", "style": { "navigationBarTitleText": "智能报告" } }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "金宫味业",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F5F7FA"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#1E3A5F",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/dashboard/dashboard", "text": "战情室" },
+      { "pagePath": "pages/crawler/crawler", "text": "采集" },
+      { "pagePath": "pages/report/report", "text": "报告" }
+    ]
+  }
+}
