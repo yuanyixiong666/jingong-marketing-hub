@@ -1,17 +1,17 @@
 {
-  "name": "金宫味业数字营销数据中台",
-  "appid": "",
-  "description": "全域数据采集、智能分析、可视化决策",
-  "versionName": "1.0.0",
-  "versionCode": "100",
-  "mp-weixin": {
-    "appid": "",
-    "setting": {
-      "urlCheck": false,
-      "es6": true,
-      "postcss": true,
-      "minified": true
-    },
-    "usingComponents": true
-  }
+    "name" : "金宫味业数字营销数据中台",
+    "appid" : "__UNI__1E07C49",
+    "description" : "全域数据采集、智能分析、可视化决策",
+    "versionName" : "1.0.0",
+    "versionCode" : "100",
+    "mp-weixin" : {
+        "appid" : "",
+        "setting" : {
+            "urlCheck" : false,
+            "es6" : true,
+            "postcss" : true,
+            "minified" : true
+        },
+        "usingComponents" : true
+    }
 }

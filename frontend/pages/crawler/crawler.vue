@@ -16,7 +16,11 @@
           </view>
           <view class="task-actions">
             <text class="task-badge" :class="task.status">{{ statusMap[task.status] || task.status }}</text>
-            <button class="run-btn" size="mini" @click="handleRun(task.id)">执行</button>
+            <button v-if="task.status === 'running'" class="pause-btn" size="mini" @click="handlePause(task.id)">暂停</button>
+            <button v-if="task.status === 'running'" class="stop-btn" size="mini" @click="handleStop(task.id)">停止</button>
+            <button v-if="task.status === 'paused'" class="run-btn" size="mini" @click="handleRun(task.id)">继续</button>
+            <button v-if="task.status === 'paused'" class="stop-btn" size="mini" @click="handleStop(task.id)">停止</button>
+            <button v-if="task.status === 'pending' || task.status === 'failed' || task.status === 'success'" class="run-btn" size="mini" @click="handleRun(task.id)">执行</button>
           </view>
         </view>
       </view>
@@ -69,7 +73,7 @@
  * AI生成：任务列表展示和手动触发
  * 人工修改：完善数据展示和交互逻辑
  */
-import { getTasks, runTask, getCompetitors, getPlatformStats } from "@/utils/api"
+import { getTasks, runTask, pauseTask, stopTask, getCompetitors, getPlatformStats } from "@/utils/api"
 
 export default {
   data() {
@@ -78,7 +82,7 @@ export default {
       competitors: [],
       platforms: [],
       totalData: 0,
-      statusMap: { pending: "待执行", running: "运行中", success: "成功", failed: "失败" },
+      statusMap: { pending: "待执行", running: "运行中", paused: "已暂停", success: "成功", failed: "失败" },
     }
   },
   onShow() {
@@ -112,6 +116,26 @@ export default {
         uni.showToast({ title: "执行失败", icon: "none" })
       }
     },
+    async handlePause(taskId) {
+      uni.showLoading({ title: "暂停中..." })
+      try {
+        await pauseTask(taskId)
+        uni.showToast({ title: "已暂停", icon: "success" })
+        setTimeout(() => this.loadData(), 500)
+      } catch (e) {
+        uni.showToast({ title: "暂停失败", icon: "none" })
+      }
+    },
+    async handleStop(taskId) {
+      uni.showLoading({ title: "停止中..." })
+      try {
+        await stopTask(taskId)
+        uni.showToast({ title: "已停止", icon: "success" })
+        setTimeout(() => this.loadData(), 500)
+      } catch (e) {
+        uni.showToast({ title: "停止失败", icon: "none" })
+      }
+    },
     formatTime(t) {
       if (!t) return "未执行"
       return new Date(t).toLocaleString()
@@ -143,9 +167,24 @@ export default {
 .task-badge.pending { background: #f0f0f0; color: #999; }
 .task-badge.success { background: #c6f6d5; color: #38a169; }
 .task-badge.running { background: #bee3f8; color: #3182ce; }
+.task-badge.paused { background: #fefcbf; color: #b7791f; }
 .task-badge.failed { background: #fed7d7; color: #e53e3e; }
 .run-btn {
   background: #2c5282;
+  color: #fff;
+  font-size: 24rpx;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+}
+.pause-btn {
+  background: #d69e2e;
+  color: #fff;
+  font-size: 24rpx;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+}
+.stop-btn {
+  background: #e53e3e;
   color: #fff;
   font-size: 24rpx;
   border-radius: 8rpx;

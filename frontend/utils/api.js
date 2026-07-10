@@ -15,6 +15,8 @@ export const getCompetitorPrices = (id) => get(`/api/competitors/${id}/prices`)
 // 任务调度
 export const getTasks = () => get("/api/tasks")
 export const runTask = (id) => post(`/api/tasks/${id}/run`)
+export const pauseTask = (id) => post(`/api/tasks/${id}/pause`)
+export const stopTask = (id) => post(`/api/tasks/${id}/stop`)
 
 // 舆情数据
 export const getSentimentList = (params) => get("/api/sentiment", params)
