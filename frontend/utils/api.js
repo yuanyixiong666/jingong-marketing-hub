@@ -22,3 +22,6 @@ export const getSentimentStats = () => get("/api/sentiment/stats")
 
 // 智能报告
 export const generateReport = (data) => post("/api/report/generate", data)
+
+// AI情感分析
+export const analyzeSentiment = (data) => post("/api/report/analyze-sentiment", data)
