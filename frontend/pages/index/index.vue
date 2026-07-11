@@ -50,9 +50,10 @@
     <!-- 舆情预警 -->
     <view class="card" v-if="negativeCount > 0">
       <text class="card-title">舆情预警</text>
-      <view class="alert-item">
+      <view class="alert-item" @click="goSentiment">
         <text class="alert-icon">!</text>
         <text class="alert-text">发现 {{ negativeCount }} 条负面舆情，建议及时处理</text>
+        <text class="alert-arrow">></text>
       </view>
     </view>
   </view>
@@ -134,6 +135,9 @@ export default {
     getPlatformName(key) {
       const map = { douyin: "抖音", xiaohongshu: "小红书", tmall: "天猫", jd: "京东" }
       return map[key] || key
+    },
+    goSentiment() {
+      uni.navigateTo({ url: "/pages/sentiment/sentiment?filter=negative" })
     },
   },
 }
@@ -259,6 +263,7 @@ export default {
   border-radius: 12rpx;
   border-left: 6rpx solid #e53e3e;
 }
+.alert-arrow { color: #c53030; font-size: 28rpx; margin-left: auto; }
 .alert-icon {
   width: 40rpx;
   height: 40rpx;
