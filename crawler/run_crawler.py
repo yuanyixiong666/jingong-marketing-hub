@@ -2,7 +2,13 @@
 爬虫启动入口
 AI生成：调度各平台爬虫并写入数据
 """
+import sys
+import os
 import asyncio
+
+# 将项目根目录加入 Python 路径，解决 PyCharm 运行时找不到 crawler 模块的问题
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from crawler.spiders.mock_spider import MockSpider, MockHotListSpider
 from crawler.pipelines.data_pipeline import DataPipeline
 

@@ -1,10 +1,11 @@
 """
 爬虫任务调度API路由
 AI生成：任务管理接口
-人工修改：修复序列化问题，使用Pydantic Schema
+人工修改：修复序列化问题，使用Pydantic Schema，实现真实爬虫触发
 """
+import asyncio
 from datetime import datetime
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -14,6 +15,65 @@ from app.schemas.common import ResponseModel
 from app.schemas.crawl_task import CrawlTaskOut
 
 router = APIRouter(prefix="/api/tasks", tags=["任务调度"])
+
+
+async def _execute_crawl_task(task_id: int):
+    """
+    后台执行爬虫任务
+    在后台异步运行Mock爬虫，完成后更新任务状态和结果摘要
+    """
+    import sys
+    import os
+    # 确保能导入crawler模块
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+    from app.database import async_session
+    from crawler.spiders.mock_spider import MockSpider, MockHotListSpider
+    from crawler.pipelines.data_pipeline import DataPipeline
+
+    result_summary = ""
+    try:
+        pipeline = DataPipeline()
+
+        # 运行Mock爬虫
+        spider = MockSpider()
+        data = await spider.crawl()
+        await spider.close()
+        save_result = await pipeline.save_batch(data)
+        result_summary += f"Mock爬虫: {save_result['success']}成功/{save_result['failed']}失败 "
+
+        # 运行热榜爬虫
+        hot_spider = MockHotListSpider()
+        hot_data = await hot_spider.crawl()
+        await hot_spider.close()
+        save_result2 = await pipeline.save_batch(hot_data)
+        result_summary += f"热榜爬虫: {save_result2['success']}成功/{save_result2['failed']}失败"
+
+        await pipeline.close()
+
+        # 更新任务状态为成功
+        async with async_session() as db:
+            result = await db.execute(select(CrawlTask).where(CrawlTask.id == task_id))
+            task = result.scalar_one_or_none()
+            if task:
+                task.status = "success"
+                task.result_summary = result_summary
+                await db.commit()
+
+    except Exception as e:
+        # 更新任务状态为失败
+        try:
+            async with async_session() as db:
+                result = await db.execute(select(CrawlTask).where(CrawlTask.id == task_id))
+                task = result.scalar_one_or_none()
+                if task:
+                    task.status = "failed"
+                    task.error_message = str(e)[:500]
+                    await db.commit()
+        except Exception:
+            pass
 
 
 @router.get("", response_model=ResponseModel[list[CrawlTaskOut]])
@@ -26,19 +86,28 @@ async def list_tasks(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/{task_id}/run", response_model=ResponseModel)
-async def run_task(task_id: int, db: AsyncSession = Depends(get_db)):
-    """手动触发任务执行（pending/paused→running）"""
+async def run_task(
+    task_id: int,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    """手动触发任务执行（pending/paused→running），后台异步运行爬虫"""
     result = await db.execute(select(CrawlTask).where(CrawlTask.id == task_id))
     task = result.scalar_one_or_none()
     if not task:
         return ResponseModel(code=404, message="任务不存在")
     if task.status == "running":
         return ResponseModel(code=400, message="任务已在运行中")
+
     task.status = "running"
     task.last_run_at = datetime.now()
+    task.error_message = None
     await db.flush()
-    # TODO: 实际触发爬虫任务（通过Redis队列或Celery）
-    return ResponseModel(message="任务已触发")
+
+    # 通过BackgroundTasks异步触发爬虫执行
+    background_tasks.add_task(_execute_crawl_task, task_id)
+
+    return ResponseModel(message="任务已触发，正在后台执行")
 
 
 @router.post("/{task_id}/pause", response_model=ResponseModel)

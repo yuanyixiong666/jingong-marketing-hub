@@ -1,6 +1,7 @@
 """
 项目配置模块
 AI生成：数据库连接配置、Redis配置、应用基础配置
+人工修改：添加API认证密钥配置
 """
 from pydantic_settings import BaseSettings
 
@@ -28,6 +29,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     LLM_MODEL: str = "gpt-3.5-turbo"
+
+    # API认证密钥（配置后所有接口需要携带 X-API-Key 请求头，留空则不认证）
+    API_AUTH_KEY: str = ""
 
     @property
     def DATABASE_URL(self) -> str:

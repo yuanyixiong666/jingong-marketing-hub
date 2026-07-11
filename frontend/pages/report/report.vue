@@ -32,6 +32,98 @@
       </view>
     </view>
 
+    <!-- 营销归因分析 -->
+    <view class="card">
+      <text class="card-title">营销归因分析</text>
+      <text class="desc">基于时间衰减的多触点归因模型，分析各平台营销贡献度</text>
+      <view class="attr-controls">
+        <view class="attr-period-btns">
+          <button
+            v-for="p in [7, 14, 30]"
+            :key="p"
+            class="period-btn"
+            :class="{ active: attrDays === p }"
+            @click="loadAttribution(p)"
+          >{{ p }}天</button>
+        </view>
+        <button class="attr-refresh-btn" :disabled="attrLoading" @click="loadAttribution(attrDays)">
+          {{ attrLoading ? "分析中..." : "刷新" }}
+        </button>
+      </view>
+
+      <!-- 归因加载动画 -->
+      <view v-if="attrLoading && !attrData" class="loading-tip">
+        <view class="loading-dot"></view>
+        <text class="loading-text">正在计算归因分数...</text>
+      </view>
+
+      <!-- 归因结果 -->
+      <view v-if="attrData && attrData.platform_attribution && attrData.platform_attribution.length">
+        <!-- 归因总结 -->
+        <view class="attr-summary" v-if="attrData.summary">
+          <text>{{ attrData.summary }}</text>
+        </view>
+
+        <!-- 平台归因排名 -->
+        <view class="attr-section">
+          <text class="attr-section-title">平台贡献度排名</text>
+          <view class="attr-bar-list">
+            <view
+              v-for="(item, idx) in attrData.platform_attribution"
+              :key="idx"
+              class="attr-bar-item"
+            >
+              <view class="attr-bar-header">
+                <text class="attr-bar-name">{{ idx + 1 }}. {{ item.platform_name }}</text>
+                <text class="attr-bar-ratio">{{ item.attribution_ratio }}%</text>
+              </view>
+              <view class="attr-bar-track">
+                <view class="attr-bar-fill" :style="{ width: item.attribution_ratio + '%' }"></view>
+              </view>
+              <view class="attr-bar-detail">
+                <text>{{ item.data_count }}条数据</text>
+                <text>点赞{{ item.total_likes }}</text>
+                <text>评论{{ item.total_comments }}</text>
+                <text>分享{{ item.total_shares }}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 内容类型归因 -->
+        <view class="attr-section" v-if="attrData.content_type_attribution && attrData.content_type_attribution.length">
+          <text class="attr-section-title">内容类型贡献度</text>
+          <view class="attr-content-grid">
+            <view
+              v-for="(item, idx) in attrData.content_type_attribution"
+              :key="idx"
+              class="attr-content-item"
+            >
+              <text class="attr-content-name">{{ item.content_name }}</text>
+              <text class="attr-content-ratio">{{ item.attribution_ratio }}%</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 模型参数 -->
+        <view class="attr-params" v-if="attrData.model_params">
+          <text class="attr-params-title">模型参数</text>
+          <text class="attr-params-text">
+            半衰期{{ attrData.model_params.half_life_days }}天 |
+            点赞x{{ attrData.model_params.likes_weight }}
+            评论x{{ attrData.model_params.comments_weight }}
+            分享x{{ attrData.model_params.shares_weight }}
+            销量x{{ attrData.model_params.sales_weight }}
+          </text>
+        </view>
+      </view>
+
+      <!-- 无数据 -->
+      <view v-if="attrData && attrData.total_records === 0" class="attr-empty">
+        <text>暂无数据，请先执行采集任务获取数据</text>
+      </view>
+    </view>
+
     <!-- AI情感分析 -->
     <view class="card">
       <text class="card-title">AI情感分析</text>
@@ -90,9 +182,9 @@
 /**
  * 智能报告页面
  * AI生成：调用通义千问LLM生成日报/周报 + AI情感分析
- * 人工修改：完善报告展示、添加AI情感分析交互
+ * 人工修改：完善报告展示、添加AI情感分析交互、营销归因分析
  */
-import { generateReport, getPlatformStats, getSentimentStats, getCompetitors, analyzeSentiment } from "@/utils/api"
+import { generateReport, getPlatformStats, getSentimentStats, getCompetitors, analyzeSentiment, getAttributionScores } from "@/utils/api"
 
 export default {
   data() {
@@ -108,6 +200,10 @@ export default {
         competitors: 0,
         positiveRate: 0,
       },
+      // 归因分析
+      attrDays: 30,
+      attrLoading: false,
+      attrData: null,
       // AI情感分析
       analyzeText: "",
       analyzeKeyword: "",
@@ -117,6 +213,7 @@ export default {
   },
   onShow() {
     this.loadSummary()
+    this.loadAttribution(this.attrDays)
   },
   methods: {
     async loadSummary() {
@@ -140,6 +237,20 @@ export default {
         }
       } catch (e) {
         console.log("摘要加载失败", e)
+      }
+    },
+    async loadAttribution(days) {
+      this.attrDays = days
+      this.attrLoading = true
+      try {
+        const res = await getAttributionScores(days)
+        if (res.code === 200 && res.data) {
+          this.attrData = res.data
+        }
+      } catch (e) {
+        console.log("归因分析加载失败", e)
+      } finally {
+        this.attrLoading = false
       }
     },
     async generateDaily() {
@@ -247,6 +358,95 @@ export default {
   border-top: 1rpx solid #f0f0f0;
 }
 .footer-text { font-size: 22rpx; color: #999; }
+
+/* 归因分析 */
+.attr-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 20rpx; }
+.attr-period-btns { display: flex; gap: 16rpx; }
+.period-btn {
+  padding: 10rpx 28rpx;
+  font-size: 26rpx;
+  background: #f1f5f9;
+  border-radius: 20rpx;
+  color: #64748b;
+  border: none;
+}
+.period-btn.active { background: #1e3a5f; color: #fff; }
+.attr-refresh-btn {
+  padding: 10rpx 28rpx;
+  font-size: 26rpx;
+  background: #fff;
+  border: 2rpx solid #1e3a5f;
+  border-radius: 20rpx;
+  color: #1e3a5f;
+}
+.attr-refresh-btn[disabled] { opacity: 0.5; }
+
+.attr-summary {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: #f0f7ff;
+  border-radius: 12rpx;
+  border-left: 6rpx solid #2c5282;
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.6;
+}
+
+.attr-section { margin-top: 24rpx; }
+.attr-section-title { font-size: 28rpx; font-weight: 600; color: #1e3a5f; display: block; margin-bottom: 16rpx; }
+
+.attr-bar-list { display: flex; flex-direction: column; gap: 20rpx; }
+.attr-bar-item { }
+.attr-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8rpx; }
+.attr-bar-name { font-size: 26rpx; color: #333; font-weight: 500; }
+.attr-bar-ratio { font-size: 28rpx; color: #1e3a5f; font-weight: 700; }
+.attr-bar-track {
+  height: 16rpx;
+  background: #e2e8f0;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+.attr-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1e3a5f, #2c5282);
+  border-radius: 8rpx;
+  transition: width 0.6s ease;
+  min-width: 4rpx;
+}
+.attr-bar-detail {
+  display: flex; gap: 16rpx; margin-top: 8rpx;
+  font-size: 22rpx; color: #999;
+}
+
+.attr-content-grid {
+  display: flex; flex-wrap: wrap; gap: 16rpx;
+}
+.attr-content-item {
+  flex: 1; min-width: 30%;
+  text-align: center;
+  padding: 20rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+}
+.attr-content-name { display: block; font-size: 24rpx; color: #666; }
+.attr-content-ratio { display: block; font-size: 36rpx; font-weight: 700; color: #1e3a5f; margin-top: 8rpx; }
+
+.attr-params {
+  margin-top: 20rpx;
+  padding: 16rpx 20rpx;
+  background: #f8fafc;
+  border-radius: 8rpx;
+}
+.attr-params-title { font-size: 24rpx; color: #999; display: block; margin-bottom: 8rpx; }
+.attr-params-text { font-size: 22rpx; color: #aaa; }
+
+.attr-empty {
+  margin-top: 20rpx;
+  padding: 40rpx;
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+}
 
 /* AI情感分析 */
 .ai-input-wrap { margin-top: 20rpx; }

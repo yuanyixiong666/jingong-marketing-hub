@@ -1,6 +1,7 @@
 /**
  * API接口定义
  * AI生成：集中管理所有后端接口调用
+ * 人工修改：添加归因分析接口
  */
 import { get, post } from "./request"
 
@@ -27,3 +28,6 @@ export const generateReport = (data) => post("/api/report/generate", data)
 
 // AI情感分析
 export const analyzeSentiment = (data) => post("/api/report/analyze-sentiment", data)
+
+// 归因分析
+export const getAttributionScores = (days) => get("/api/attribution/scores", { days })
