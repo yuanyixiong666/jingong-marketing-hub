@@ -32,6 +32,10 @@ async def _execute_crawl_task(task_id: int):
     from app.database import async_session
     from crawler.spiders.mock_spider import MockSpider, MockHotListSpider
     from crawler.spiders.douyin_spider import DouyinSpider
+    from crawler.spiders.weibo_spider import WeiboSpider
+    from crawler.spiders.xiaohongshu_spider import XiaohongshuSpider
+    from crawler.spiders.tmall_spider import TmallSpider
+    from crawler.spiders.jd_spider import JdSpider
     from crawler.pipelines.data_pipeline import DataPipeline
 
     result_summary = ""
@@ -57,7 +61,35 @@ async def _execute_crawl_task(task_id: int):
         douyin_data = await douyin_spider.crawl()
         await douyin_spider.close()
         save_result3 = await pipeline.save_batch(douyin_data)
-        result_summary += f"抖音爬虫: {save_result3['success']}成功/{save_result3['failed']}失败"
+        result_summary += f"抖音爬虫: {save_result3['success']}成功/{save_result3['failed']}失败 "
+
+        # 运行微博爬虫
+        weibo_spider = WeiboSpider()
+        weibo_data = await weibo_spider.crawl()
+        await weibo_spider.close()
+        save_result4 = await pipeline.save_batch(weibo_data)
+        result_summary += f"微博爬虫: {save_result4['success']}成功/{save_result4['failed']}失败 "
+
+        # 运行小红书爬虫
+        xhs_spider = XiaohongshuSpider()
+        xhs_data = await xhs_spider.crawl()
+        await xhs_spider.close()
+        save_result5 = await pipeline.save_batch(xhs_data)
+        result_summary += f"小红书爬虫: {save_result5['success']}成功/{save_result5['failed']}失败 "
+
+        # 运行天猫爬虫
+        tmall_spider = TmallSpider()
+        tmall_data = await tmall_spider.crawl()
+        await tmall_spider.close()
+        save_result6 = await pipeline.save_batch(tmall_data)
+        result_summary += f"天猫爬虫: {save_result6['success']}成功/{save_result6['failed']}失败 "
+
+        # 运行京东爬虫
+        jd_spider = JdSpider()
+        jd_data = await jd_spider.crawl()
+        await jd_spider.close()
+        save_result7 = await pipeline.save_batch(jd_data)
+        result_summary += f"京东爬虫: {save_result7['success']}成功/{save_result7['failed']}失败"
 
         await pipeline.close()
 

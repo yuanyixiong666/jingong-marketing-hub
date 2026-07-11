@@ -29,6 +29,11 @@ PLATFORM_CONFIG = {
         "base_url": "https://www.jd.com",
         "interval_seconds": 14400,
     },
+    "weibo": {
+        "base_url": "https://weibo.com",
+        "hot_search_url": "https://weibo.com/ajax/side/hotSearch",
+        "interval_seconds": 3600,  # 1小时一次
+    },
 }
 
 # 竞品关键词（金宫味业主要竞品）

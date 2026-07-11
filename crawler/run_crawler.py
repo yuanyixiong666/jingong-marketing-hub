@@ -11,6 +11,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from crawler.spiders.mock_spider import MockSpider, MockHotListSpider
 from crawler.spiders.douyin_spider import DouyinSpider
+from crawler.spiders.weibo_spider import WeiboSpider
+from crawler.spiders.xiaohongshu_spider import XiaohongshuSpider
+from crawler.spiders.tmall_spider import TmallSpider
+from crawler.spiders.jd_spider import JdSpider
 from crawler.pipelines.data_pipeline import DataPipeline
 
 
@@ -41,6 +45,34 @@ async def main():
     print(f"[抖音爬虫] 获取 {len(douyin_data)} 条数据")
     result3 = await pipeline.save_batch(douyin_data)
     print(f"[写入结果] 成功: {result3['success']}, 失败: {result3['failed']}")
+
+    # 4. 运行微博爬虫
+    weibo_spider = WeiboSpider()
+    weibo_data = await weibo_spider.crawl()
+    print(f"[微博爬虫] 获取 {len(weibo_data)} 条数据")
+    result4 = await pipeline.save_batch(weibo_data)
+    print(f"[写入结果] 成功: {result4['success']}, 失败: {result4['failed']}")
+
+    # 5. 运行小红书爬虫
+    xhs_spider = XiaohongshuSpider()
+    xhs_data = await xhs_spider.crawl()
+    print(f"[小红书爬虫] 获取 {len(xhs_data)} 条数据")
+    result5 = await pipeline.save_batch(xhs_data)
+    print(f"[写入结果] 成功: {result5['success']}, 失败: {result5['failed']}")
+
+    # 6. 运行天猫爬虫
+    tmall_spider = TmallSpider()
+    tmall_data = await tmall_spider.crawl()
+    print(f"[天猫爬虫] 获取 {len(tmall_data)} 条数据")
+    result6 = await pipeline.save_batch(tmall_data)
+    print(f"[写入结果] 成功: {result6['success']}, 失败: {result6['failed']}")
+
+    # 7. 运行京东爬虫
+    jd_spider = JdSpider()
+    jd_data = await jd_spider.crawl()
+    print(f"[京东爬虫] 获取 {len(jd_data)} 条数据")
+    result7 = await pipeline.save_batch(jd_data)
+    print(f"[写入结果] 成功: {result7['success']}, 失败: {result7['failed']}")
 
     await pipeline.close()
     print("\n采集任务完成!")
