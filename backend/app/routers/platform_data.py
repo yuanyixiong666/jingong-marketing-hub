@@ -23,6 +23,15 @@ async def create_data(data: PlatformDataCreate, db: AsyncSession = Depends(get_d
     return ResponseModel(data={"id": record.id}, message="创建成功")
 
 
+@router.post("/batch", response_model=ResponseModel)
+async def create_batch_data(data: list[PlatformDataCreate], db: AsyncSession = Depends(get_db)):
+    """批量新增平台数据（爬虫批量写入）"""
+    records = [PlatformData(**item.model_dump()) for item in data]
+    db.add_all(records)
+    await db.flush()
+    return ResponseModel(data={"count": len(records)}, message=f"批量创建成功，共{len(records)}条")
+
+
 @router.get("", response_model=PaginatedResponse[PlatformDataOut])
 async def list_data(
     platform: str = Query(None, description="平台筛选"),

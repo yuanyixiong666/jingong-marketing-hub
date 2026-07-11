@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     LLM_MODEL: str = "gpt-3.5-turbo"
 
+    # API服务地址（爬虫管道等模块统一使用此配置）
+    API_BASE_URL: str = "http://localhost:8000"
+
     # API认证密钥（配置后所有接口需要携带 X-API-Key 请求头，留空则不认证）
     API_AUTH_KEY: str = ""
 

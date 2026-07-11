@@ -1,8 +1,9 @@
 /**
  * 统一请求封装
  * AI生成：封装uni.request，统一处理错误和loading
+ * 人工修改：API地址集中配置，方便修改
  */
-const BASE_URL = "http://localhost:8000"
+const BASE_URL = "http://localhost:8000"  // 后端API地址，部署时修改此处即可
 
 const request = (options) => {
   return new Promise((resolve, reject) => {

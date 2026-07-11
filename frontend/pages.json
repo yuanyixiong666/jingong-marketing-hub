@@ -3,7 +3,9 @@
     { "path": "pages/index/index", "style": { "navigationBarTitleText": "数据中台" } },
     { "path": "pages/dashboard/dashboard", "style": { "navigationBarTitleText": "营销战情室" } },
     { "path": "pages/crawler/crawler", "style": { "navigationBarTitleText": "数据采集" } },
-    { "path": "pages/report/report", "style": { "navigationBarTitleText": "智能报告" } }
+    { "path": "pages/report/report", "style": { "navigationBarTitleText": "智能报告" } },
+    { "path": "pages/competitor/competitor", "style": { "navigationBarTitleText": "竞品详情" } },
+    { "path": "pages/task/task", "style": { "navigationBarTitleText": "任务详情" } }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

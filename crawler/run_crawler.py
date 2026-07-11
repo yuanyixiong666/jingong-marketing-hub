@@ -10,6 +10,7 @@ import asyncio
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from crawler.spiders.mock_spider import MockSpider, MockHotListSpider
+from crawler.spiders.douyin_spider import DouyinSpider
 from crawler.pipelines.data_pipeline import DataPipeline
 
 
@@ -33,6 +34,13 @@ async def main():
     print(f"[热榜爬虫] 获取 {len(hot_data)} 条数据")
     result2 = await pipeline.save_batch(hot_data)
     print(f"[写入结果] 成功: {result2['success']}, 失败: {result2['failed']}")
+
+    # 3. 运行抖音爬虫
+    douyin_spider = DouyinSpider()
+    douyin_data = await douyin_spider.crawl()
+    print(f"[抖音爬虫] 获取 {len(douyin_data)} 条数据")
+    result3 = await pipeline.save_batch(douyin_data)
+    print(f"[写入结果] 成功: {result3['success']}, 失败: {result3['failed']}")
 
     await pipeline.close()
     print("\n采集任务完成!")

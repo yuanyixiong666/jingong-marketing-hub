@@ -31,6 +31,7 @@ async def _execute_crawl_task(task_id: int):
 
     from app.database import async_session
     from crawler.spiders.mock_spider import MockSpider, MockHotListSpider
+    from crawler.spiders.douyin_spider import DouyinSpider
     from crawler.pipelines.data_pipeline import DataPipeline
 
     result_summary = ""
@@ -49,7 +50,14 @@ async def _execute_crawl_task(task_id: int):
         hot_data = await hot_spider.crawl()
         await hot_spider.close()
         save_result2 = await pipeline.save_batch(hot_data)
-        result_summary += f"热榜爬虫: {save_result2['success']}成功/{save_result2['failed']}失败"
+        result_summary += f"热榜爬虫: {save_result2['success']}成功/{save_result2['failed']}失败 "
+
+        # 运行抖音爬虫
+        douyin_spider = DouyinSpider()
+        douyin_data = await douyin_spider.crawl()
+        await douyin_spider.close()
+        save_result3 = await pipeline.save_batch(douyin_data)
+        result_summary += f"抖音爬虫: {save_result3['success']}成功/{save_result3['failed']}失败"
 
         await pipeline.close()
 

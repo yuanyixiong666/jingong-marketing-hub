@@ -8,7 +8,7 @@
     <view class="card">
       <text class="card-title">采集任务</text>
       <view class="task-list">
-        <view class="task-row" v-for="task in tasks" :key="task.id">
+        <view class="task-row" v-for="task in tasks" :key="task.id" @click="goTask(task.id)">
           <view class="task-info">
             <text class="task-name">{{ task.task_name }}</text>
             <text class="task-meta">{{ task.task_type }} | {{ task.cron_expr }}</text>
@@ -30,7 +30,7 @@
     <view class="card">
       <text class="card-title">竞品监控</text>
       <view class="competitor-list">
-        <view class="competitor-row" v-for="c in competitors" :key="c.id">
+        <view class="competitor-row" v-for="c in competitors" :key="c.id" @click="goCompetitor(c.id)">
           <view class="comp-info">
             <text class="brand-name">{{ c.brand_name }}</text>
             <text class="brand-desc">{{ c.description || "" }}</text>
@@ -135,6 +135,12 @@ export default {
       } catch (e) {
         uni.showToast({ title: "停止失败", icon: "none" })
       }
+    },
+    goCompetitor(id) {
+      uni.navigateTo({ url: `/pages/competitor/competitor?id=${id}` })
+    },
+    goTask(id) {
+      uni.navigateTo({ url: `/pages/task/task?id=${id}` })
     },
     formatTime(t) {
       if (!t) return "未执行"

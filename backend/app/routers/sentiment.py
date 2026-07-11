@@ -4,7 +4,7 @@ AI生成：舆情查询与统计接口
 """
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 
 from app.database import get_db
 from app.models.sentiment import SentimentData
@@ -43,9 +43,9 @@ async def get_sentiment_stats(db: AsyncSession = Depends(get_db)):
         select(
             SentimentData.keyword,
             func.count(SentimentData.id).label("total"),
-            func.sum(func.if_(SentimentData.sentiment == "positive", 1, 0)).label("positive"),
-            func.sum(func.if_(SentimentData.sentiment == "negative", 1, 0)).label("negative"),
-            func.sum(func.if_(SentimentData.sentiment == "neutral", 1, 0)).label("neutral"),
+            func.sum(case((SentimentData.sentiment == "positive", 1), else_=0)).label("positive"),
+            func.sum(case((SentimentData.sentiment == "negative", 1), else_=0)).label("negative"),
+            func.sum(case((SentimentData.sentiment == "neutral", 1), else_=0)).label("neutral"),
         )
         .group_by(SentimentData.keyword)
     )
