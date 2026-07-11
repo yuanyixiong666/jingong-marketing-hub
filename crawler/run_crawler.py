@@ -15,6 +15,7 @@ from crawler.spiders.weibo_spider import WeiboSpider
 from crawler.spiders.xiaohongshu_spider import XiaohongshuSpider
 from crawler.spiders.tmall_spider import TmallSpider
 from crawler.spiders.jd_spider import JdSpider
+from crawler.spiders.playwright_spider import PlaywrightSpider
 from crawler.pipelines.data_pipeline import DataPipeline
 
 
@@ -73,6 +74,13 @@ async def main():
     print(f"[京东爬虫] 获取 {len(jd_data)} 条数据")
     result7 = await pipeline.save_batch(jd_data)
     print(f"[写入结果] 成功: {result7['success']}, 失败: {result7['failed']}")
+
+    # 8. 运行 Playwright 爬虫（JS渲染页面）
+    pw_spider = PlaywrightSpider()
+    pw_data = await pw_spider.crawl()
+    print(f"[Playwright爬虫] 获取 {len(pw_data)} 条数据")
+    result8 = await pipeline.save_batch(pw_data)
+    print(f"[写入结果] 成功: {result8['success']}, 失败: {result8['failed']}")
 
     await pipeline.close()
     print("\n采集任务完成!")

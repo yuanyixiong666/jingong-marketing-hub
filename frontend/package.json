@@ -1,0 +1,15 @@
+{
+  "name": "jingong-marketing-hub-frontend",
+  "version": "1.0.0",
+  "description": "金宫味业数字营销数据中台 - 微信小程序前端",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "echarts": "^5.6.0",
+    "echarts-for-weixin": "^1.0.0",
+    "pinia": "^2.3.1",
+    "uview-plus": "^3.8.55"
+  }
+}

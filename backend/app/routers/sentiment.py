@@ -1,6 +1,7 @@
 """
 舆情数据API路由
 AI生成：舆情查询与统计接口
+人工修改：集成 Redis 缓存层
 """
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +11,7 @@ from app.database import get_db
 from app.models.sentiment import SentimentData
 from app.schemas.common import ResponseModel
 from app.schemas.sentiment import SentimentOut
+from app.services.cache_service import RedisCache
 
 router = APIRouter(prefix="/api/sentiment", tags=["舆情监控"])
 
@@ -37,7 +39,15 @@ async def list_sentiment(
 
 @router.get("/stats", response_model=ResponseModel)
 async def get_sentiment_stats(db: AsyncSession = Depends(get_db)):
-    """获取舆情统计概览"""
+    """获取舆情统计概览（带 Redis 缓存）"""
+    cache_key = "sentiment_stats"
+
+    # 尝试从 Redis 缓存读取
+    cached = await RedisCache.get(cache_key)
+    if cached is not None:
+        return ResponseModel(data=cached, message="缓存命中")
+
+    # 缓存未命中，查询数据库
     # 按关键词统计
     keyword_query = (
         select(
@@ -67,4 +77,9 @@ async def get_sentiment_stats(db: AsyncSession = Depends(get_db)):
     dist_result = await db.execute(dist_query)
     distribution = {r[0]: r[1] for r in dist_result.all()}
 
-    return ResponseModel(data={"by_keyword": stats, "distribution": distribution})
+    result_data = {"by_keyword": stats, "distribution": distribution}
+
+    # 写入 Redis 缓存，5 分钟过期
+    await RedisCache.set(cache_key, result_data, ttl=300)
+
+    return ResponseModel(data=result_data)

@@ -6,34 +6,38 @@
       <text class="header-sub">数字营销数据中台</text>
     </view>
 
-    <!-- 核心指标卡片 -->
-    <view class="stats-grid">
-      <view class="card stat-card" v-for="item in stats" :key="item.label">
-        <text class="stat-value">{{ item.value }}</text>
-        <text class="stat-label">{{ item.label }}</text>
-      </view>
-    </view>
+    <!-- 核心指标卡片 - 使用 uview-plus u-grid -->
+    <u-grid :col="2" :border="false">
+      <u-grid-item v-for="item in stats" :key="item.label">
+        <view class="stat-card">
+          <text class="stat-value">{{ item.value }}</text>
+          <text class="stat-label">{{ item.label }}</text>
+        </view>
+      </u-grid-item>
+    </u-grid>
 
-    <!-- 各平台数据概览 -->
+    <!-- 各平台数据概览 - 使用 uview-plus u-list -->
     <view class="card">
       <text class="card-title">平台数据概览</text>
-      <view class="platform-list">
-        <view class="platform-item" v-for="p in platforms" :key="p.name">
-          <view class="platform-left">
-            <text class="platform-icon">{{ p.icon }}</text>
-            <text class="platform-name">{{ p.name }}</text>
-          </view>
-          <view class="platform-right">
-            <text class="platform-count">{{ p.count }} 条</text>
-            <view class="platform-bar">
-              <view class="bar-fill" :style="{ width: p.percent + '%' }"></view>
+      <u-list @scrolltolower="loadMore">
+        <u-list-item v-for="p in platforms" :key="p.name">
+          <view class="platform-item">
+            <view class="platform-left">
+              <u-avatar :text="p.icon" size="48" bgColor="#e8f0fe" color="#2c5282"></u-avatar>
+              <text class="platform-name">{{ p.name }}</text>
+            </view>
+            <view class="platform-right">
+              <text class="platform-count">{{ p.count }} 条</text>
+              <view class="platform-bar">
+                <view class="bar-fill" :style="{ width: p.percent + '%' }"></view>
+              </view>
             </view>
           </view>
-        </view>
-      </view>
+        </u-list-item>
+      </u-list>
     </view>
 
-    <!-- 最近爬取任务 -->
+    <!-- 最近爬取任务 - 使用 uview-plus u-tag 状态标签 -->
     <view class="card">
       <text class="card-title">最近采集任务</text>
       <view class="task-list">
@@ -42,20 +46,25 @@
             <text class="task-name">{{ t.task_name }}</text>
             <text class="task-time">{{ t.cron_expr }}</text>
           </view>
-          <text class="task-status" :class="t.status">{{ statusMap[t.status] || t.status }}</text>
+          <u-tag
+            :text="statusMap[t.status] || t.status"
+            :type="statusTypeMap[t.status] || 'info'"
+            size="mini"
+            shape="circle"
+          ></u-tag>
         </view>
       </view>
     </view>
 
-    <!-- 舆情预警 -->
-    <view class="card" v-if="negativeCount > 0">
-      <text class="card-title">舆情预警</text>
-      <view class="alert-item" @click="goSentiment">
-        <text class="alert-icon">!</text>
-        <text class="alert-text">发现 {{ negativeCount }} 条负面舆情，建议及时处理</text>
-        <text class="alert-arrow">></text>
-      </view>
-    </view>
+    <!-- 舆情预警 - 使用 uview-plus u-notice-bar -->
+    <u-notice-bar v-if="negativeCount > 0" text="发现负面舆情，建议及时处理" type="error" :scrollable="false">
+      <template #right>
+        <view class="notice-action" @click="goSentiment">
+          <text class="notice-text">发现 {{ negativeCount }} 条负面舆情，建议及时处理</text>
+          <text class="notice-arrow">></text>
+        </view>
+      </template>
+    </u-notice-bar>
   </view>
 </template>
 
@@ -63,7 +72,7 @@
 /**
  * 首页 - 数据概览
  * AI生成：展示核心指标和平台数据概览
- * 人工修改：完善API对接和数据展示逻辑
+ * 人工修改：集成 uview-plus 组件库（u-grid/u-list/u-avatar/u-tag/u-notice-bar），完善API对接
  */
 import { getPlatformStats, getTasks, getSentimentStats } from "@/utils/api"
 
@@ -85,6 +94,7 @@ export default {
       tasks: [],
       negativeCount: 0,
       statusMap: { pending: "待执行", running: "运行中", success: "成功", failed: "失败" },
+      statusTypeMap: { pending: "info", running: "primary", success: "success", failed: "error" },
     }
   },
   onShow() {
@@ -109,12 +119,11 @@ export default {
               total += item.total
             }
           })
-          // 计算百分比
           this.platforms.forEach((p) => {
             p.percent = total > 0 ? Math.round((p.count / total) * 100) : 0
           })
           this.stats[0].value = String(total)
-          this.stats[1].value = String(total) // 简化：今日采集 = 总量
+          this.stats[1].value = String(total)
         }
 
         // 任务数据
@@ -133,11 +142,14 @@ export default {
       }
     },
     getPlatformName(key) {
-      const map = { douyin: "抖音", xiaohongshu: "小红书", tmall: "天猫", jd: "京东" }
+      const map = { douyin: "抖音", xiaohongshu: "小红书", tmall: "天猫", jd: "京东", weibo: "微博" }
       return map[key] || key
     },
     goSentiment() {
       uni.navigateTo({ url: "/pages/sentiment/sentiment?filter=negative" })
+    },
+    loadMore() {
+      // 列表滚动到底部时的处理
     },
   },
 }
@@ -160,15 +172,7 @@ export default {
   color: #666;
   margin-top: 8rpx;
 }
-.stats-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  margin-bottom: 20rpx;
-}
 .stat-card {
-  flex: 1;
-  min-width: 45%;
   text-align: center;
   padding: 30rpx 16rpx;
 }
@@ -182,10 +186,6 @@ export default {
   color: #999;
   margin-top: 8rpx;
 }
-.platform-list {
-  display: flex;
-  flex-direction: column;
-}
 .platform-item {
   display: flex;
   justify-content: space-between;
@@ -198,20 +198,6 @@ export default {
   display: flex;
   align-items: center;
   gap: 12rpx;
-}
-.platform-icon {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 50%;
-  background: #e8f0fe;
-  color: #2c5282;
-  font-size: 24rpx;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  line-height: 48rpx;
 }
 .platform-name { color: #333; font-size: 28rpx; }
 .platform-right {
@@ -245,38 +231,11 @@ export default {
 .task-left { flex: 1; }
 .task-name { display: block; font-size: 28rpx; color: #333; }
 .task-time { display: block; font-size: 22rpx; color: #999; margin-top: 4rpx; }
-.task-status {
-  font-size: 22rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 8rpx;
-}
-.task-status.success { background: #c6f6d5; color: #38a169; }
-.task-status.running { background: #bee3f8; color: #3182ce; }
-.task-status.pending { background: #f0f0f0; color: #999; }
-.task-status.failed { background: #fed7d7; color: #e53e3e; }
-.alert-item {
+.notice-action {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 16rpx;
-  background: #fff5f5;
-  border-radius: 12rpx;
-  border-left: 6rpx solid #e53e3e;
+  padding: 8rpx 16rpx;
 }
-.alert-arrow { color: #c53030; font-size: 28rpx; margin-left: auto; }
-.alert-icon {
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
-  background: #e53e3e;
-  color: #fff;
-  font-size: 24rpx;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  line-height: 40rpx;
-}
-.alert-text { color: #c53030; font-size: 26rpx; }
+.notice-text { color: #c53030; font-size: 26rpx; }
+.notice-arrow { color: #c53030; font-size: 28rpx; margin-left: 8rpx; }
 </style>

@@ -36,6 +36,7 @@ async def _execute_crawl_task(task_id: int):
     from crawler.spiders.xiaohongshu_spider import XiaohongshuSpider
     from crawler.spiders.tmall_spider import TmallSpider
     from crawler.spiders.jd_spider import JdSpider
+    from crawler.spiders.playwright_spider import PlaywrightSpider
     from crawler.pipelines.data_pipeline import DataPipeline
 
     result_summary = ""
@@ -89,7 +90,14 @@ async def _execute_crawl_task(task_id: int):
         jd_data = await jd_spider.crawl()
         await jd_spider.close()
         save_result7 = await pipeline.save_batch(jd_data)
-        result_summary += f"京东爬虫: {save_result7['success']}成功/{save_result7['failed']}失败"
+        result_summary += f"京东爬虫: {save_result7['success']}成功/{save_result7['failed']}失败 "
+
+        # 运行 Playwright 爬虫（JS渲染页面）
+        pw_spider = PlaywrightSpider()
+        pw_data = await pw_spider.crawl()
+        await pw_spider.close()
+        save_result8 = await pipeline.save_batch(pw_data)
+        result_summary += f"Playwright爬虫: {save_result8['success']}成功/{save_result8['failed']}失败"
 
         await pipeline.close()
 

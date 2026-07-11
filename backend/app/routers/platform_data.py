@@ -1,6 +1,7 @@
 """
 平台数据API路由
 AI生成：CRUD接口 + 数据查询
+人工修改：集成 Redis 缓存层，提升查询性能
 """
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +11,7 @@ from app.database import get_db
 from app.models.platform_data import PlatformData
 from app.schemas.common import ResponseModel, PaginatedResponse
 from app.schemas.platform_data import PlatformDataCreate, PlatformDataOut
+from app.services.cache_service import RedisCache
 
 router = APIRouter(prefix="/api/platform-data", tags=["平台数据"])
 
@@ -61,7 +63,15 @@ async def list_data(
 
 @router.get("/stats", response_model=ResponseModel)
 async def get_stats(db: AsyncSession = Depends(get_db)):
-    """获取各平台数据统计概览"""
+    """获取各平台数据统计概览（带 Redis 缓存）"""
+    cache_key = "platform_stats"
+
+    # 尝试从 Redis 缓存读取
+    cached = await RedisCache.get(cache_key)
+    if cached is not None:
+        return ResponseModel(data=cached, message="缓存命中")
+
+    # 缓存未命中，查询数据库
     stats_query = (
         select(
             PlatformData.platform,
@@ -82,4 +92,8 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         }
         for r in rows
     ]
+
+    # 写入 Redis 缓存，5 分钟过期
+    await RedisCache.set(cache_key, stats, ttl=300)
+
     return ResponseModel(data=stats)
