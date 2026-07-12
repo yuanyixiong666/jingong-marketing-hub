@@ -157,19 +157,19 @@
     <view class="card">
       <text class="card-title">数据摘要</text>
       <view class="summary-grid">
-        <view class="summary-item">
+        <view class="summary-item" @click="goCrawler">
           <text class="summary-value">{{ summary.totalData }}</text>
           <text class="summary-label">总数据量</text>
         </view>
-        <view class="summary-item">
+        <view class="summary-item" @click="goSentiment">
           <text class="summary-value">{{ summary.totalSentiment }}</text>
           <text class="summary-label">舆情条数</text>
         </view>
-        <view class="summary-item">
+        <view class="summary-item" @click="goCrawler">
           <text class="summary-value">{{ summary.competitors }}</text>
           <text class="summary-label">监控竞品</text>
         </view>
-        <view class="summary-item">
+        <view class="summary-item" @click="goSentiment">
           <text class="summary-value">{{ summary.positiveRate }}%</text>
           <text class="summary-label">正面舆情率</text>
         </view>
@@ -209,38 +209,45 @@ export default {
       analyzeKeyword: "",
       aiAnalyzing: false,
       aiResult: null,
-      dataLoaded: false,
+      _loading: false,
+      _lastLoad: 0,
     }
   },
+  onLoad() {
+    this.loadSummary()
+    this.loadAttribution(this.attrDays)
+  },
   onShow() {
-    if (!this.dataLoaded) {
-      this.dataLoaded = true
+    if (Date.now() - this._lastLoad > 60000) {
       this.loadSummary()
       this.loadAttribution(this.attrDays)
     }
   },
   methods: {
     async loadSummary() {
+      if (this._loading) return
+      this._loading = true
       try {
-        const [statsRes, sentRes, compRes] = await Promise.all([
-          getPlatformStats(),
-          getSentimentStats(),
-          getCompetitors(),
-        ])
+        const [statsRes, sentRes, compRes] = await Promise.all([getPlatformStats(), getSentimentStats(), getCompetitors()])
+        const newSummary = { ...this.summary }
         if (statsRes.code === 200) {
-          this.summary.totalData = (statsRes.data || []).reduce((s, p) => s + p.total, 0)
+          newSummary.totalData = (statsRes.data || []).reduce((s, p) => s + p.total, 0)
         }
         if (sentRes.code === 200 && sentRes.data) {
           const dist = sentRes.data.distribution || {}
           const total = (dist.positive || 0) + (dist.neutral || 0) + (dist.negative || 0)
-          this.summary.totalSentiment = total
-          this.summary.positiveRate = total > 0 ? Math.round(((dist.positive || 0) / total) * 100) : 0
+          newSummary.totalSentiment = total
+          newSummary.positiveRate = total > 0 ? Math.round(((dist.positive || 0) / total) * 100) : 0
         }
         if (compRes.code === 200) {
-          this.summary.competitors = (compRes.data || []).length
+          newSummary.competitors = (compRes.data || []).length
         }
+        this.summary = newSummary
       } catch (e) {
-        console.log("摘要加载失败", e)
+        console.error("[Report] 摘要加载失败", e)
+      } finally {
+        this._loading = false
+        this._lastLoad = Date.now()
       }
     },
     async loadAttribution(days) {
@@ -316,6 +323,15 @@ export default {
     sentimentLabel(s) {
       const map = { positive: "正面", negative: "负面", neutral: "中性" }
       return map[s] || "未知"
+    },
+    goDashboard() {
+      uni.switchTab({ url: "/pages/dashboard/dashboard" })
+    },
+    goSentiment() {
+      uni.navigateTo({ url: "/pages/sentiment/sentiment" })
+    },
+    goCrawler() {
+      uni.switchTab({ url: "/pages/crawler/crawler" })
     },
   },
 }

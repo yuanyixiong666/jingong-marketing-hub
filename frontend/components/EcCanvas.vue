@@ -126,9 +126,11 @@ export default {
     return {
       canvasWidth: 0,
       canvasHeight: 0,
-      chart: null,
-      wxCanvas: null,
     }
+  },
+  created() {
+    this.chart = null
+    this.wxCanvas = null
   },
   mounted() {
     this.canvasWidth = Number(this.width)

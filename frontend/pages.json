@@ -6,7 +6,8 @@
     { "path": "pages/report/report", "style": { "navigationBarTitleText": "智能报告" } },
     { "path": "pages/competitor/competitor", "style": { "navigationBarTitleText": "竞品详情" } },
     { "path": "pages/task/task", "style": { "navigationBarTitleText": "任务详情" } },
-    { "path": "pages/sentiment/sentiment", "style": { "navigationBarTitleText": "舆情监控" } }
+    { "path": "pages/sentiment/sentiment", "style": { "navigationBarTitleText": "舆情监控" } },
+    { "path": "pages/platform-data/platform-data", "style": { "navigationBarTitleText": "平台数据详情" } }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

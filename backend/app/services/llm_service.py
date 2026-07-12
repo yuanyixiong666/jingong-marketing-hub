@@ -10,7 +10,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 # DashScope OpenAI兼容端点
-CHAT_COMPLETIONS_URL = f"{settings.OPENAI_BASE_URL}/chat/completions"
+CHAT_COMPLETIONS_URL = f"{settings.DASHSCOPE_BASE_URL}/chat/completions"
 
 # 请求超时时间（秒）
 TIMEOUT = 60.0
@@ -32,13 +32,13 @@ async def chat_completion(
     Returns:
         模型生成的文本内容
     """
-    if not settings.OPENAI_API_KEY:
-        logger.warning("OPENAI_API_KEY未配置，跳过LLM调用")
-        return "[AI服务未配置：请在.env中设置OPENAI_API_KEY]"
+    if not settings.DASHSCOPE_API_KEY:
+        logger.warning("DASHSCOPE_API_KEY未配置，跳过LLM调用")
+        return "[AI服务未配置：请在.env中设置DASHSCOPE_API_KEY]"
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+        "Authorization": f"Bearer {settings.DASHSCOPE_API_KEY}",
     }
 
     payload = {
@@ -77,7 +77,7 @@ async def chat_completion(
         return "[AI服务响应超时，请稍后重试]"
     except httpx.HTTPStatusError as e:
         logger.error(f"LLM API返回错误状态: {e.response.status_code} - {e.response.text[:200]}")
-        return f"[AI服务调用失败: HTTP {e.response.status_code}]"
+        return f"[AI服务调用失败: HTTP {e.response.status_code} | URL:{CHAT_COMPLETIONS_URL} | KEY:{settings.DASHSCOPE_API_KEY[:8]}... | RESP:{e.response.text[:100]}]"
     except Exception as e:
         logger.error(f"LLM API调用异常: {e}")
         return f"[AI服务异常: {str(e)}]"

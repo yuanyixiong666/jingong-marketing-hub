@@ -8,7 +8,7 @@
 
     <!-- 核心指标卡片 - 使用 uview-plus u-grid -->
     <u-grid :col="2" :border="false">
-      <u-grid-item v-for="item in stats" :key="item.label">
+      <u-grid-item v-for="(item, index) in stats" :key="item.label" @click="onStatClick(index)">
         <view class="stat-card">
           <text class="stat-value">{{ item.value }}</text>
           <text class="stat-label">{{ item.label }}</text>
@@ -21,7 +21,7 @@
       <text class="card-title">平台数据概览</text>
       <u-list @scrolltolower="loadMore">
         <u-list-item v-for="p in platforms" :key="p.name">
-          <view class="platform-item">
+          <view class="platform-item" @click="goPlatformData(p)">
             <view class="platform-left">
               <u-avatar :text="p.icon" size="48" bgColor="#e8f0fe" color="#2c5282"></u-avatar>
               <text class="platform-name">{{ p.name }}</text>
@@ -41,7 +41,7 @@
     <view class="card">
       <text class="card-title">最近采集任务</text>
       <view class="task-list">
-        <view class="task-item" v-for="t in tasks" :key="t.id">
+        <view class="task-item" v-for="t in tasks" :key="t.id" @click="goTask(t.id)">
           <view class="task-left">
             <text class="task-name">{{ t.task_name }}</text>
             <text class="task-time">{{ t.cron_expr }}</text>
@@ -95,14 +95,10 @@ export default {
       negativeCount: 0,
       statusMap: { pending: "待执行", running: "运行中", success: "成功", failed: "失败" },
       statusTypeMap: { pending: "info", running: "primary", success: "success", failed: "error" },
-      dataLoaded: false,
     }
   },
   onShow() {
-    if (!this.dataLoaded) {
-      this.dataLoaded = true
-      this.loadData()
-    }
+    this.loadData()
   },
   methods: {
     async loadData() {
@@ -151,6 +147,25 @@ export default {
     },
     goSentiment() {
       uni.navigateTo({ url: "/pages/sentiment/sentiment?filter=negative" })
+    },
+    onStatClick(index) {
+      if (index === 0 || index === 1 || index === 2) {
+        uni.switchTab({ url: "/pages/crawler/crawler" })
+      } else if (index === 3) {
+        uni.navigateTo({ url: "/pages/sentiment/sentiment" })
+      }
+    },
+    goDashboard() {
+      uni.switchTab({ url: "/pages/dashboard/dashboard" })
+    },
+    goCrawler() {
+      uni.switchTab({ url: "/pages/crawler/crawler" })
+    },
+    goPlatformData(p) {
+      uni.navigateTo({ url: `/pages/platform-data/platform-data?name=${encodeURIComponent(p.name)}&icon=${p.icon}` })
+    },
+    goTask(id) {
+      uni.navigateTo({ url: `/pages/task/task?id=${id}` })
     },
     loadMore() {
       // 列表滚动到底部时的处理

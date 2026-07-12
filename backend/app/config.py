@@ -26,9 +26,17 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: str = ""
 
     # AI服务配置
-    OPENAI_API_KEY: str = ""
-    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
-    LLM_MODEL: str = "gpt-3.5-turbo"
+    DASHSCOPE_API_KEY: str = ""
+    DASHSCOPE_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    LLM_MODEL: str = "qwen3.7-max"
+
+    @property
+    def OPENAI_API_KEY(self) -> str:
+        return self.DASHSCOPE_API_KEY
+
+    @property
+    def OPENAI_BASE_URL(self) -> str:
+        return self.DASHSCOPE_BASE_URL
 
     # API服务地址（爬虫管道等模块统一使用此配置）
     API_BASE_URL: str = "http://localhost:8000"

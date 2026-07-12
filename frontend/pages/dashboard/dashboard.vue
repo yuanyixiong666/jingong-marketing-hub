@@ -16,7 +16,7 @@
       <text class="card-title">舆情情感分布</text>
       <EcCanvas canvasId="pieChart" :width="340" :height="280" :ec="pieEc" />
       <view class="sentiment-summary">
-        <text class="summary-text">共 {{ totalSentiment }} 条舆情，正面占比 {{ positivePercent }}%</text>
+        <text class="summary-text">共 {{ sentimentInfo.total }} 条舆情，正面占比 {{ sentimentInfo.percent }}%</text>
       </view>
     </view>
 
@@ -55,7 +55,6 @@ export default {
   components: { EcCanvas },
   data() {
     return {
-      charts: {},
       barEc: { onInit: null },
       pieEc: { onInit: null },
       lineEc: { onInit: null },
@@ -64,23 +63,23 @@ export default {
       pieChartData: { pieData: [] },
       lineChartData: { categories: [], series: [] },
       engagementChartData: { categories: [], series: [] },
-      totalSentiment: 0,
-      positivePercent: 0,
-      dataLoaded: false,
+      sentimentInfo: { total: 0, percent: 0 },
+      _loading: false,
+      _lastLoad: 0,
     }
   },
   created() {
-    // 在 created 中绑定方法，避免模板中箭头函数导致无限重渲染
+    this.charts = {}
     this.barEc.onInit = this.initBarChart.bind(this)
     this.pieEc.onInit = this.initPieChart.bind(this)
     this.lineEc.onInit = this.initLineChart.bind(this)
     this.engagementEc.onInit = this.initEngagementChart.bind(this)
   },
+  onLoad() {
+    this.loadData()
+  },
   onShow() {
-    if (!this.dataLoaded) {
-      this.dataLoaded = true
-      this.loadData()
-    }
+    if (Date.now() - this._lastLoad > 60000) this.loadData()
   },
   methods: {
     // ---- ECharts 初始化回调（由 EcCanvas 调用）----
@@ -197,12 +196,10 @@ export default {
 
     // ---- 数据加载 ----
     async loadData() {
+      if (this._loading) return
+      this._loading = true
       try {
-        const [statsRes, sentRes] = await Promise.all([
-          getPlatformStats(),
-          getSentimentStats(),
-        ])
-
+        const [statsRes, sentRes] = await Promise.all([getPlatformStats(), getSentimentStats()])
         if (statsRes.code === 200 && statsRes.data) {
           const nameMap = { douyin: "抖音", xiaohongshu: "小红书", tmall: "天猫", jd: "京东", weibo: "微博" }
           const categories = statsRes.data.map(item => nameMap[item.platform] || item.platform)
@@ -218,8 +215,8 @@ export default {
         if (sentRes.code === 200 && sentRes.data) {
           const dist = sentRes.data.distribution || {}
           const totalS = (dist.positive || 0) + (dist.neutral || 0) + (dist.negative || 0)
-          this.totalSentiment = totalS
-          this.positivePercent = totalS > 0 ? Math.round(((dist.positive || 0) / totalS) * 100) : 0
+          const percentS = totalS > 0 ? Math.round(((dist.positive || 0) / totalS) * 100) : 0
+          this.sentimentInfo = { total: totalS, percent: percentS }
           this.pieChartData = {
             pieData: [
               { name: "正面", value: dist.positive || 0 },
@@ -242,6 +239,9 @@ export default {
         }
       } catch (e) {
         console.log("数据加载失败", e)
+      } finally {
+        this._loading = false
+        this._lastLoad = Date.now()
       }
     },
   },

@@ -16,11 +16,11 @@
           </view>
           <view class="task-actions">
             <text class="task-badge" :class="task.status">{{ statusMap[task.status] || task.status }}</text>
-            <button v-if="task.status === 'running'" class="pause-btn" size="mini" @click="handlePause(task.id)">暂停</button>
-            <button v-if="task.status === 'running'" class="stop-btn" size="mini" @click="handleStop(task.id)">停止</button>
-            <button v-if="task.status === 'paused'" class="run-btn" size="mini" @click="handleRun(task.id)">继续</button>
-            <button v-if="task.status === 'paused'" class="stop-btn" size="mini" @click="handleStop(task.id)">停止</button>
-            <button v-if="task.status === 'pending' || task.status === 'failed' || task.status === 'success'" class="run-btn" size="mini" @click="handleRun(task.id)">执行</button>
+            <button v-if="task.status === 'running'" class="pause-btn" size="mini" @click.stop="handlePause(task.id)">暂停</button>
+            <button v-if="task.status === 'running'" class="stop-btn" size="mini" @click.stop="handleStop(task.id)">停止</button>
+            <button v-if="task.status === 'paused'" class="run-btn" size="mini" @click.stop="handleRun(task.id)">继续</button>
+            <button v-if="task.status === 'paused'" class="stop-btn" size="mini" @click.stop="handleStop(task.id)">停止</button>
+            <button v-if="task.status === 'pending' || task.status === 'failed' || task.status === 'success'" class="run-btn" size="mini" @click.stop="handleRun(task.id)">执行</button>
           </view>
         </view>
       </view>
@@ -82,32 +82,38 @@ export default {
       competitors: [],
       platforms: [],
       totalData: 0,
+      _loading: false,
+      _lastLoad: 0,
       statusMap: { pending: "待执行", running: "运行中", paused: "已暂停", success: "成功", failed: "失败" },
-      dataLoaded: false,
     }
   },
+  onLoad() {
+    this.loadData()
+  },
   onShow() {
-    if (!this.dataLoaded) {
-      this.dataLoaded = true
-      this.loadData()
-    }
+    if (Date.now() - this._lastLoad > 60000) this.loadData()
   },
   methods: {
     async loadData() {
+      if (this._loading) return
+      this._loading = true
       try {
-        const [tasksRes, compRes, statsRes] = await Promise.all([
-          getTasks(),
-          getCompetitors(),
-          getPlatformStats(),
-        ])
-        if (tasksRes.code === 200) this.tasks = tasksRes.data || []
-        if (compRes.code === 200) this.competitors = compRes.data || []
+        const [tasksRes, compRes, statsRes] = await Promise.all([getTasks(), getCompetitors(), getPlatformStats()])
+        if (tasksRes.code === 200) {
+          this.tasks = tasksRes.data || []
+        }
+        if (compRes.code === 200) {
+          this.competitors = compRes.data || []
+        }
         if (statsRes.code === 200) {
           this.platforms = statsRes.data || []
           this.totalData = this.platforms.reduce((s, p) => s + p.total, 0)
         }
       } catch (e) {
-        console.log("加载失败", e)
+        console.error("[Crawler] 加载失败", e)
+      } finally {
+        this._loading = false
+        this._lastLoad = Date.now()
       }
     },
     async handleRun(taskId) {
@@ -145,6 +151,15 @@ export default {
     },
     goTask(id) {
       uni.navigateTo({ url: `/pages/task/task?id=${id}` })
+    },
+    goDashboard() {
+      uni.switchTab({ url: "/pages/dashboard/dashboard" })
+    },
+    goTaskList() {
+      uni.switchTab({ url: "/pages/dashboard/dashboard" })
+    },
+    goCompetitorList() {
+      uni.switchTab({ url: "/pages/dashboard/dashboard" })
     },
     formatTime(t) {
       if (!t) return "未执行"

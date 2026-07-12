@@ -3,7 +3,7 @@
  * AI生成：封装uni.request，统一处理错误和loading
  * 人工修改：API地址集中配置，增加请求计数器避免loading闪烁，增加超时
  */
-const BASE_URL = "http://localhost:8000"  // 后端API地址，部署时修改此处即可
+const BASE_URL = "http://localhost:8001"  // 后端API地址，部署时修改此处即可
 
 let requestCount = 0
 
@@ -20,7 +20,7 @@ const request = (options) => {
       url: BASE_URL + options.url,
       method: options.method || "GET",
       data: options.data || {},
-      timeout: 15000,
+      timeout: 30000,
       header: {
         "Content-Type": "application/json",
         ...options.header,
