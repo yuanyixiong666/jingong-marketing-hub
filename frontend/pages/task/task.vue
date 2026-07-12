@@ -99,7 +99,9 @@ export default {
         if (res.code === 200 && res.data) {
           this.task = res.data.find((t) => t.id === this.task.id) || this.task
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("[Task] 刷新失败", e)
+      }
     },
   },
 }

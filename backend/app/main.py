@@ -9,17 +9,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.database import init_db
+from app.database import init_db, engine
 from app.routers import platform_data, competitor, crawl_task, sentiment, report, attribution
 from app.services.cache_service import RedisCache
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """应用生命周期：启动时初始化数据库，关闭时释放Redis连接"""
+    """应用生命周期：启动时初始化数据库，关闭时释放Redis和数据库连接"""
     await init_db()
     yield
     await RedisCache.close()
+    await engine.dispose()
 
 
 app = FastAPI(

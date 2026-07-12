@@ -98,10 +98,14 @@ export default {
     }
   },
   onShow() {
+    if (this._loading) return
+    if (this._lastLoad && Date.now() - this._lastLoad < 60000) return
     this.loadData()
   },
   methods: {
     async loadData() {
+      if (this._loading) return
+      this._loading = true
       try {
         const [statsRes, tasksRes, sentRes] = await Promise.all([
           getPlatformStats(),
@@ -123,7 +127,7 @@ export default {
             p.percent = total > 0 ? Math.round((p.count / total) * 100) : 0
           })
           this.stats[0].value = String(total)
-          this.stats[1].value = String(total)
+          this.stats[1].value = String(this.platforms.filter((p) => p.count > 0).length)
         }
 
         // 任务数据
@@ -139,6 +143,9 @@ export default {
         }
       } catch (e) {
         console.log("数据加载失败", e)
+      } finally {
+        this._loading = false
+        this._lastLoad = Date.now()
       }
     },
     getPlatformName(key) {
@@ -154,12 +161,6 @@ export default {
       } else if (index === 3) {
         uni.navigateTo({ url: "/pages/sentiment/sentiment" })
       }
-    },
-    goDashboard() {
-      uni.switchTab({ url: "/pages/dashboard/dashboard" })
-    },
-    goCrawler() {
-      uni.switchTab({ url: "/pages/crawler/crawler" })
     },
     goPlatformData(p) {
       uni.navigateTo({ url: `/pages/platform-data/platform-data?name=${encodeURIComponent(p.name)}&icon=${p.icon}` })

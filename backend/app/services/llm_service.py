@@ -77,10 +77,10 @@ async def chat_completion(
         return "[AI服务响应超时，请稍后重试]"
     except httpx.HTTPStatusError as e:
         logger.error(f"LLM API返回错误状态: {e.response.status_code} - {e.response.text[:200]}")
-        return f"[AI服务调用失败: HTTP {e.response.status_code} | URL:{CHAT_COMPLETIONS_URL} | KEY:{settings.DASHSCOPE_API_KEY[:8]}... | RESP:{e.response.text[:100]}]"
+        return f"[AI服务调用失败: HTTP {e.response.status_code}]"
     except Exception as e:
         logger.error(f"LLM API调用异常: {e}")
-        return f"[AI服务异常: {str(e)}]"
+        return "[AI服务异常，请稍后重试]"
 
 
 async def generate_report_content(report_type: str, data_context: dict) -> str:

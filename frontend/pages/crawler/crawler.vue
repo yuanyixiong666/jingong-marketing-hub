@@ -152,15 +152,6 @@ export default {
     goTask(id) {
       uni.navigateTo({ url: `/pages/task/task?id=${id}` })
     },
-    goDashboard() {
-      uni.switchTab({ url: "/pages/dashboard/dashboard" })
-    },
-    goTaskList() {
-      uni.switchTab({ url: "/pages/dashboard/dashboard" })
-    },
-    goCompetitorList() {
-      uni.switchTab({ url: "/pages/dashboard/dashboard" })
-    },
     formatTime(t) {
       if (!t) return "未执行"
       return new Date(t).toLocaleString()

@@ -214,14 +214,13 @@ export default {
     }
   },
   onLoad() {
-    this.loadSummary()
-    this.loadAttribution(this.attrDays)
+    // 首次加载由 onShow 触发，避免重复调用
   },
   onShow() {
-    if (Date.now() - this._lastLoad > 60000) {
-      this.loadSummary()
-      this.loadAttribution(this.attrDays)
-    }
+    if (this._loading) return
+    if (this._lastLoad && Date.now() - this._lastLoad < 60000) return
+    this.loadSummary()
+    this.loadAttribution(this.attrDays)
   },
   methods: {
     async loadSummary() {
@@ -323,9 +322,6 @@ export default {
     sentimentLabel(s) {
       const map = { positive: "正面", negative: "负面", neutral: "中性" }
       return map[s] || "未知"
-    },
-    goDashboard() {
-      uni.switchTab({ url: "/pages/dashboard/dashboard" })
     },
     goSentiment() {
       uni.navigateTo({ url: "/pages/sentiment/sentiment" })
