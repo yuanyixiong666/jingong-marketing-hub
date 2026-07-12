@@ -66,6 +66,7 @@ export default {
       engagementChartData: { categories: [], series: [] },
       totalSentiment: 0,
       positivePercent: 0,
+      dataLoaded: false,
     }
   },
   created() {
@@ -76,7 +77,10 @@ export default {
     this.engagementEc.onInit = this.initEngagementChart.bind(this)
   },
   onShow() {
-    this.loadData()
+    if (!this.dataLoaded) {
+      this.dataLoaded = true
+      this.loadData()
+    }
   },
   methods: {
     // ---- ECharts 初始化回调（由 EcCanvas 调用）----
@@ -162,10 +166,26 @@ export default {
       if (!this.charts.engagement) return
       this.charts.engagement.setOption({
         title: { text: '', textStyle: { fontSize: 14, color: '#333' } },
-        tooltip: { trigger: 'axis' },
-        grid: { left: 40, right: 20, top: 40, bottom: 30 },
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(params) {
+            var p = params[0]
+            var val = p.value
+            var formatted = val >= 10000 ? (val / 10000).toFixed(1) + '万' : val
+            return p.name + '<br/>' + p.seriesName + ': ' + formatted
+          }
+        },
+        grid: { left: 50, right: 20, top: 40, bottom: 30 },
         xAxis: { type: 'category', data: this.engagementChartData.categories, axisLabel: { fontSize: 11 } },
-        yAxis: { type: 'value', axisLabel: { fontSize: 11 } },
+        yAxis: {
+          type: 'value',
+          axisLabel: {
+            fontSize: 11,
+            formatter: function(value) {
+              return value >= 10000 ? (value / 10000).toFixed(0) + '万' : value
+            }
+          }
+        },
         series: this.engagementChartData.series.map((s, i) => ({
           name: s.name || '',
           type: 'bar',

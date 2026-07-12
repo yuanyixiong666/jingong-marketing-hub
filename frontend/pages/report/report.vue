@@ -209,11 +209,15 @@ export default {
       analyzeKeyword: "",
       aiAnalyzing: false,
       aiResult: null,
+      dataLoaded: false,
     }
   },
   onShow() {
-    this.loadSummary()
-    this.loadAttribution(this.attrDays)
+    if (!this.dataLoaded) {
+      this.dataLoaded = true
+      this.loadSummary()
+      this.loadAttribution(this.attrDays)
+    }
   },
   methods: {
     async loadSummary() {

@@ -95,10 +95,14 @@ export default {
       negativeCount: 0,
       statusMap: { pending: "待执行", running: "运行中", success: "成功", failed: "失败" },
       statusTypeMap: { pending: "info", running: "primary", success: "success", failed: "error" },
+      dataLoaded: false,
     }
   },
   onShow() {
-    this.loadData()
+    if (!this.dataLoaded) {
+      this.dataLoaded = true
+      this.loadData()
+    }
   },
   methods: {
     async loadData() {

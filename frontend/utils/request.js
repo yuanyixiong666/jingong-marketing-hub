@@ -20,7 +20,7 @@ const request = (options) => {
       url: BASE_URL + options.url,
       method: options.method || "GET",
       data: options.data || {},
-      timeout: 10000,
+      timeout: 15000,
       header: {
         "Content-Type": "application/json",
         ...options.header,

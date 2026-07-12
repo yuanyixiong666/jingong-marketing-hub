@@ -83,10 +83,14 @@ export default {
       platforms: [],
       totalData: 0,
       statusMap: { pending: "待执行", running: "运行中", paused: "已暂停", success: "成功", failed: "失败" },
+      dataLoaded: false,
     }
   },
   onShow() {
-    this.loadData()
+    if (!this.dataLoaded) {
+      this.dataLoaded = true
+      this.loadData()
+    }
   },
   methods: {
     async loadData() {
