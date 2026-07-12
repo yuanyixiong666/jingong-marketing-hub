@@ -87,8 +87,8 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         {
             "platform": r.platform,
             "total": r.total,
-            "total_likes": r.total_likes or 0,
-            "avg_price": round(r.avg_price, 2) if r.avg_price else 0,
+            "total_likes": int(r.total_likes or 0),
+            "avg_price": round(float(r.avg_price), 2) if r.avg_price else 0,
         }
         for r in rows
     ]

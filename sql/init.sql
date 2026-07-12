@@ -52,19 +52,21 @@ CREATE TABLE IF NOT EXISTS competitor_prices (
     INDEX idx_competitor_platform (competitor_id, platform)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="竞品价格表";
 
--- 舆情记录表
-CREATE TABLE IF NOT EXISTS sentiment_records (
+-- 舆情记录表（与ORM模型 sentiment.py 保持一致）
+CREATE TABLE IF NOT EXISTS sentiment_data (
     id INT PRIMARY KEY AUTO_INCREMENT,
     keyword VARCHAR(200) NOT NULL COMMENT "舆情关键词",
-    platform VARCHAR(50) NOT NULL COMMENT "来源平台",
-    content TEXT COMMENT "原始内容",
-    sentiment_label VARCHAR(20) COMMENT "情感标签",
-    sentiment_score FLOAT COMMENT "情感得分",
-    content_tag VARCHAR(50) COMMENT "内容标签",
+    platform VARCHAR(50) COMMENT "来源平台",
+    title VARCHAR(500) COMMENT "标题",
+    content TEXT COMMENT "内容摘要",
+    sentiment VARCHAR(20) DEFAULT 'neutral' COMMENT "情感倾向: positive/negative/neutral",
+    sentiment_score FLOAT DEFAULT 0.0 COMMENT "情感分数 -1~1",
     source_url VARCHAR(1000) COMMENT "来源链接",
-    analyzed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_keyword_sentiment (keyword, sentiment_label)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="舆情记录表";
+    published_at DATETIME COMMENT "发布时间",
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_keyword (keyword),
+    INDEX idx_sentiment (sentiment)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="舆情数据表";
 
 -- 爬虫任务表
 CREATE TABLE IF NOT EXISTS crawl_tasks (

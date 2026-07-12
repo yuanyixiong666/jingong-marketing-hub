@@ -64,10 +64,10 @@ async def get_sentiment_stats(db: AsyncSession = Depends(get_db)):
     stats = [
         {
             "keyword": r.keyword,
-            "total": r.total,
-            "positive": r.positive or 0,
-            "negative": r.negative or 0,
-            "neutral": r.neutral or 0,
+            "total": int(r.total),
+            "positive": int(r.positive or 0),
+            "negative": int(r.negative or 0),
+            "neutral": int(r.neutral or 0),
         }
         for r in rows
     ]

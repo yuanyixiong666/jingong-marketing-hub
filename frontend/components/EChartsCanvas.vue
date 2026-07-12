@@ -1,52 +1,35 @@
 /**
- * ECharts 图表组件 - 封装 echarts-for-weixin 适配层
- * AI生成：ECharts 微信小程序渲染组件
- * 人工修改：支持 bar/pie/line 三种图表类型，适配 uni-app canvas
- *
- * 依赖：echarts + echarts-for-weixin 适配方案
- * 图表类型：柱状图(bar)、饼图(pie)、折线图(line)
+ * ECharts 图表组件 - 微信小程序适配版 v4
+ * 修复：切回 echarts/core + CanvasRenderer（完整包依赖 DOM API）
+ * 使用 getCurrentInstance() 获取 Vue3 组件代理，解决 .in(this) 作用域问题
  */
 <template>
-  <view class="echarts-container">
+  <view class="echarts-container" :style="{ width: canvasWidth + 'px', height: canvasHeight + 'px' }">
     <canvas
       :id="canvasId"
       :canvas-id="canvasId"
+      type="2d"
       :style="{ width: canvasWidth + 'px', height: canvasHeight + 'px' }"
-      @touchstart="touchStart"
-      @touchmove="touchMove"
-      @touchend="touchEnd"
     />
   </view>
 </template>
 
 <script>
-/**
- * echarts-for-weixin 适配组件
- * 支持三种图表类型：bar(柱状图)、pie(饼图)、line(折线图)
- */
+import { getCurrentInstance } from 'vue'
 import * as echarts from 'echarts/core'
 import { BarChart, PieChart, LineChart } from 'echarts/charts'
-import {
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-} from 'echarts/components'
+import { TitleComponent, TooltipComponent, GridComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
-echarts.use([
-  BarChart, PieChart, LineChart,
-  TitleComponent, TooltipComponent, GridComponent, LegendComponent,
-  CanvasRenderer,
-])
+echarts.use([BarChart, PieChart, LineChart, TitleComponent, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer])
 
 export default {
   name: 'EChartsCanvas',
   props: {
     canvasId: { type: String, default: 'echarts-canvas' },
-    width: { type: [Number, String], default: 375 },
-    height: { type: [Number, String], default: 300 },
-    chartType: { type: String, default: 'bar' },  // bar | pie | line
+    width: { type: [Number, String], default: 340 },
+    height: { type: [Number, String], default: 260 },
+    chartType: { type: String, default: 'bar' },
     chartData: { type: Object, default: () => ({}) },
   },
   data() {
@@ -54,75 +37,77 @@ export default {
       chart: null,
       canvasWidth: 0,
       canvasHeight: 0,
+      inited: false,
+      retryCount: 0,
     }
   },
   mounted() {
-    const sysInfo = uni.getSystemInfoSync()
-    const ratio = sysInfo.pixelRatio || 2
     this.canvasWidth = Number(this.width)
     this.canvasHeight = Number(this.height)
-    this.$nextTick(() => {
-      this.initChart(ratio)
-    })
+    this.retryCount = 0
+    this._tryInit()
   },
   watch: {
     chartData: {
       deep: true,
-      handler() {
-        this.updateChart()
+      handler(newVal) {
+        if (this.inited && newVal && Object.keys(newVal).length > 0) {
+          this.updateChart()
+        }
       },
-    },
-    chartType() {
-      this.updateChart()
     },
   },
   methods: {
-    initChart(ratio) {
-      const query = uni.createSelectorQuery().in(this)
-      query
-        .select(`#${this.canvasId}`)
-        .fields({ node: true, size: true })
-        .exec((res) => {
-          if (!res[0] || !res[0].node) {
-            // 降级：非 H5 环境使用传统方式
-            this.initChartLegacy(ratio)
-            return
-          }
-          const canvas = res[0].node
-          const ctx = canvas.getContext('2d')
-          canvas.width = res[0].width * ratio
-          canvas.height = res[0].height * ratio
-          ctx.scale(ratio, ratio)
-
-          this.chart = echarts.init(canvas, null, {
-            width: res[0].width,
-            height: res[0].height,
-            devicePixelRatio: ratio,
-          })
-          this.chart.setContext(ctx)
-          this.updateChart()
-        })
+    _tryInit() {
+      if (this.retryCount > 8) {
+        console.error('[EChartsCanvas] 超过最大重试次数, canvasId:', this.canvasId)
+        return
+      }
+      const delay = 100 + this.retryCount * 150
+      setTimeout(() => {
+        this._queryCanvas()
+      }, delay)
     },
-    initChartLegacy(ratio) {
-      // 传统 canvas 初始化（兼容微信小程序）
-      const query = uni.createSelectorQuery().in(this)
-      query
-        .select(`#${this.canvasId}`)
-        .boundingClientRect((rect) => {
-          if (!rect) return
-          this.chart = echarts.init({
-            width: rect.width * ratio,
-            height: rect.height * ratio,
-            devicePixelRatio: ratio,
+    _queryCanvas() {
+      const canvasId = this.canvasId
+      const w = this.canvasWidth
+      const h = this.canvasHeight
+      const dpr = uni.getSystemInfoSync().pixelRatio || 2
+
+      // 关键修复：在 Vue3 Options API 中用 getCurrentInstance() 获取组件代理
+      // .in(this) 中的 this 是 Vue 实例，不是小程序组件实例
+      const vm = getCurrentInstance()
+      const query = uni.createSelectorQuery().in(vm ? vm.proxy : this)
+
+      query.select('#' + canvasId).fields({ node: true, size: true }).exec((res) => {
+        if (!res || !res[0] || !res[0].node) {
+          console.log('[EChartsCanvas] canvas 未就绪, 重试中... canvasId:', canvasId, 'retry:', this.retryCount)
+          this.retryCount++
+          this._tryInit()
+          return
+        }
+        const canvas = res[0].node
+        canvas.width = w * dpr
+        canvas.height = h * dpr
+        try {
+          this.chart = echarts.init(canvas, null, {
+            width: w,
+            height: h,
+            devicePixelRatio: dpr,
           })
+          this.inited = true
+          console.log('[EChartsCanvas] 图表初始化成功, type:', this.chartType, 'id:', canvasId)
           this.updateChart()
-        })
-        .exec()
+        } catch (e) {
+          console.error('[EChartsCanvas] echarts.init 失败:', e.message)
+          this.retryCount++
+          this._tryInit()
+        }
+      })
     },
     updateChart() {
       if (!this.chart) return
-      const option = this.getChartOption()
-      this.chart.setOption(option, true)
+      this.chart.setOption(this.getChartOption(), true)
     },
     getChartOption() {
       const { chartType, chartData } = this
@@ -185,11 +170,8 @@ export default {
 
       return {}
     },
-    touchStart(e) { this.chart && this.chart.dispatchAction({ type: 'showTip' }) },
-    touchMove() {},
-    touchEnd() {},
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.chart) {
       this.chart.dispose()
       this.chart = null
@@ -203,5 +185,6 @@ export default {
   width: 100%;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 </style>

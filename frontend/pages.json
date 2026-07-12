@@ -18,10 +18,10 @@
     "color": "#999999",
     "selectedColor": "#1E3A5F",
     "list": [
-      { "pagePath": "pages/index/index", "text": "首页" },
-      { "pagePath": "pages/dashboard/dashboard", "text": "战情室" },
-      { "pagePath": "pages/crawler/crawler", "text": "采集" },
-      { "pagePath": "pages/report/report", "text": "报告" }
+      { "pagePath": "pages/index/index", "text": "首页", "iconPath": "static/tab-home.png", "selectedIconPath": "static/tab-home-active.png" },
+      { "pagePath": "pages/dashboard/dashboard", "text": "战情室", "iconPath": "static/tab-chart.png", "selectedIconPath": "static/tab-chart-active.png" },
+      { "pagePath": "pages/crawler/crawler", "text": "采集", "iconPath": "static/tab-crawl.png", "selectedIconPath": "static/tab-crawl-active.png" },
+      { "pagePath": "pages/report/report", "text": "报告", "iconPath": "static/tab-report.png", "selectedIconPath": "static/tab-report-active.png" }
     ]
   }
 }

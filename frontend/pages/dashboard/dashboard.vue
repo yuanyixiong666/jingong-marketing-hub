@@ -8,24 +8,22 @@
     <!-- 图表1: 柱状图 - 各平台数据量对比 -->
     <view class="card chart-card">
       <text class="card-title">各平台数据量对比</text>
-      <EChartsCanvas
+      <EcCanvas
         canvasId="barChart"
         :width="340"
         :height="260"
-        chartType="bar"
-        :chartData="barChartData"
+        :ec="{ onInit: initBarChart }"
       />
     </view>
 
     <!-- 图表2: 饼图 - 舆情情感分布 -->
     <view class="card chart-card">
       <text class="card-title">舆情情感分布</text>
-      <EChartsCanvas
+      <EcCanvas
         canvasId="pieChart"
         :width="340"
         :height="280"
-        chartType="pie"
-        :chartData="pieChartData"
+        :ec="{ onInit: initPieChart }"
       />
       <view class="sentiment-summary">
         <text class="summary-text">共 {{ totalSentiment }} 条舆情，正面占比 {{ positivePercent }}%</text>
@@ -35,24 +33,22 @@
     <!-- 图表3: 折线图 - 关键词情感趋势 -->
     <view class="card chart-card">
       <text class="card-title">关键词情感分布</text>
-      <EChartsCanvas
+      <EcCanvas
         canvasId="lineChart"
         :width="340"
         :height="280"
-        chartType="line"
-        :chartData="lineChartData"
+        :ec="{ onInit: initLineChart }"
       />
     </view>
 
     <!-- 图表4: 柱状图 - 平台互动量 -->
     <view class="card chart-card">
       <text class="card-title">各平台互动量</text>
-      <EChartsCanvas
+      <EcCanvas
         canvasId="barChart2"
         :width="340"
         :height="260"
-        chartType="bar"
-        :chartData="engagementChartData"
+        :ec="{ onInit: initEngagementChart }"
       />
     </view>
   </view>
@@ -61,23 +57,29 @@
 <script>
 /**
  * 营销战情室 - 数据可视化
- * AI生成：ECharts 图表渲染组件集成
- * 人工修改：对接真实API数据，使用 echarts-for-weixin 适配方案
+ * 使用 echarts-for-weixin (ec-canvas) 适配方案
  * 图表类型：柱状图(bar)、饼图(pie)、折线图(line) — 共3种
  */
 import { getPlatformStats, getSentimentStats } from "@/utils/api"
-import EChartsCanvas from "@/components/EChartsCanvas.vue"
+import EcCanvas from "@/components/EcCanvas.vue"
+import * as echarts from 'echarts/core'
+import { BarChart, PieChart, LineChart } from 'echarts/charts'
+import { TitleComponent, TooltipComponent, GridComponent, LegendComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([BarChart, PieChart, LineChart, TitleComponent, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer])
 
 const COLORS = ["#3182ce", "#38a169", "#d69e2e", "#e53e3e", "#805ad5"]
 
 export default {
-  components: { EChartsCanvas },
+  components: { EcCanvas },
   data() {
     return {
-      barChartData: { title: "", categories: [], series: [] },
-      pieChartData: { title: "", pieData: [] },
-      lineChartData: { title: "", categories: [], series: [] },
-      engagementChartData: { title: "", categories: [], series: [] },
+      charts: {},
+      barChartData: { categories: [], series: [] },
+      pieChartData: { pieData: [] },
+      lineChartData: { categories: [], series: [] },
+      engagementChartData: { categories: [], series: [] },
       totalSentiment: 0,
       positivePercent: 0,
     }
@@ -86,6 +88,103 @@ export default {
     this.loadData()
   },
   methods: {
+    // ---- ECharts 初始化回调（由 EcCanvas 调用）----
+    initBarChart(canvas, width, height, dpr) {
+      const chart = echarts.init(canvas, null, { width, height, devicePixelRatio: dpr })
+      this.charts.bar = chart
+      if (this.barChartData.categories.length > 0) this._updateBarChart()
+      return chart
+    },
+    initPieChart(canvas, width, height, dpr) {
+      const chart = echarts.init(canvas, null, { width, height, devicePixelRatio: dpr })
+      this.charts.pie = chart
+      if (this.pieChartData.pieData.length > 0) this._updatePieChart()
+      return chart
+    },
+    initLineChart(canvas, width, height, dpr) {
+      const chart = echarts.init(canvas, null, { width, height, devicePixelRatio: dpr })
+      this.charts.line = chart
+      if (this.lineChartData.categories.length > 0) this._updateLineChart()
+      return chart
+    },
+    initEngagementChart(canvas, width, height, dpr) {
+      const chart = echarts.init(canvas, null, { width, height, devicePixelRatio: dpr })
+      this.charts.engagement = chart
+      if (this.engagementChartData.categories.length > 0) this._updateEngagementChart()
+      return chart
+    },
+
+    // ---- 图表更新方法 ----
+    _updateBarChart() {
+      if (!this.charts.bar) return
+      this.charts.bar.setOption({
+        title: { text: '', textStyle: { fontSize: 14, color: '#333' } },
+        tooltip: { trigger: 'axis' },
+        grid: { left: 40, right: 20, top: 40, bottom: 30 },
+        xAxis: { type: 'category', data: this.barChartData.categories, axisLabel: { fontSize: 11 } },
+        yAxis: { type: 'value', axisLabel: { fontSize: 11 } },
+        series: this.barChartData.series.map((s, i) => ({
+          name: s.name || '',
+          type: 'bar',
+          data: s.data || [],
+          itemStyle: { color: COLORS[i % COLORS.length] },
+        })),
+      }, true)
+    },
+    _updatePieChart() {
+      if (!this.charts.pie) return
+      this.charts.pie.setOption({
+        title: { text: '', textStyle: { fontSize: 14, color: '#333' }, left: 'center' },
+        tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+        legend: { bottom: 0, textStyle: { fontSize: 11 } },
+        series: [{
+          type: 'pie',
+          radius: ['35%', '60%'],
+          data: this.pieChartData.pieData.map((item, i) => ({
+            name: item.name,
+            value: item.value,
+            itemStyle: { color: COLORS[i % COLORS.length] },
+          })),
+          emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.3)' } },
+        }],
+      }, true)
+    },
+    _updateLineChart() {
+      if (!this.charts.line) return
+      this.charts.line.setOption({
+        title: { text: '', textStyle: { fontSize: 14, color: '#333' } },
+        tooltip: { trigger: 'axis' },
+        grid: { left: 40, right: 20, top: 40, bottom: 30 },
+        xAxis: { type: 'category', data: this.lineChartData.categories, axisLabel: { fontSize: 11 } },
+        yAxis: { type: 'value', axisLabel: { fontSize: 11 } },
+        series: this.lineChartData.series.map((s, i) => ({
+          name: s.name || '',
+          type: 'line',
+          smooth: true,
+          data: s.data || [],
+          itemStyle: { color: COLORS[i % COLORS.length] },
+          areaStyle: { opacity: 0.15 },
+        })),
+      }, true)
+    },
+    _updateEngagementChart() {
+      if (!this.charts.engagement) return
+      this.charts.engagement.setOption({
+        title: { text: '', textStyle: { fontSize: 14, color: '#333' } },
+        tooltip: { trigger: 'axis' },
+        grid: { left: 40, right: 20, top: 40, bottom: 30 },
+        xAxis: { type: 'category', data: this.engagementChartData.categories, axisLabel: { fontSize: 11 } },
+        yAxis: { type: 'value', axisLabel: { fontSize: 11 } },
+        series: this.engagementChartData.series.map((s, i) => ({
+          name: s.name || '',
+          type: 'bar',
+          data: s.data || [],
+          itemStyle: { color: COLORS[i % COLORS.length] },
+        })),
+      }, true)
+    },
+
+    // ---- 数据加载 ----
     async loadData() {
       try {
         const [statsRes, sentRes] = await Promise.all([
@@ -93,54 +192,42 @@ export default {
           getSentimentStats(),
         ])
 
-        // 柱状图：各平台数据量
         if (statsRes.code === 200 && statsRes.data) {
           const nameMap = { douyin: "抖音", xiaohongshu: "小红书", tmall: "天猫", jd: "京东", weibo: "微博" }
           const categories = statsRes.data.map(item => nameMap[item.platform] || item.platform)
           const values = statsRes.data.map(item => item.total)
-          this.barChartData = {
-            title: "",
-            categories,
-            series: [{ name: "数据量", data: values }],
-          }
+          this.barChartData = { categories, series: [{ name: "数据量", data: values }] }
+          this._updateBarChart()
 
-          // 互动量柱状图
           const likesData = statsRes.data.map(item => item.total_likes || 0)
-          this.engagementChartData = {
-            title: "",
-            categories,
-            series: [{ name: "互动量", data: likesData }],
-          }
+          this.engagementChartData = { categories, series: [{ name: "互动量", data: likesData }] }
+          this._updateEngagementChart()
         }
 
-        // 饼图：舆情情感分布
         if (sentRes.code === 200 && sentRes.data) {
           const dist = sentRes.data.distribution || {}
           const totalS = (dist.positive || 0) + (dist.neutral || 0) + (dist.negative || 0)
           this.totalSentiment = totalS
           this.positivePercent = totalS > 0 ? Math.round(((dist.positive || 0) / totalS) * 100) : 0
-
           this.pieChartData = {
-            title: "",
             pieData: [
               { name: "正面", value: dist.positive || 0 },
               { name: "中性", value: dist.neutral || 0 },
               { name: "负面", value: dist.negative || 0 },
             ],
           }
+          this._updatePieChart()
 
-          // 折线图：关键词情感分布
           const byKeyword = sentRes.data.by_keyword || []
-          const kwCategories = byKeyword.map(k => k.keyword)
           this.lineChartData = {
-            title: "",
-            categories: kwCategories,
+            categories: byKeyword.map(k => k.keyword),
             series: [
               { name: "正面", data: byKeyword.map(k => k.positive || 0) },
               { name: "中性", data: byKeyword.map(k => k.neutral || 0) },
               { name: "负面", data: byKeyword.map(k => k.negative || 0) },
             ],
           }
+          this._updateLineChart()
         }
       } catch (e) {
         console.log("数据加载失败", e)

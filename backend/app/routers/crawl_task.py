@@ -3,7 +3,6 @@
 AI生成：任务管理接口
 人工修改：修复序列化问题，使用Pydantic Schema，实现真实爬虫触发
 """
-import asyncio
 from datetime import datetime
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -150,7 +149,7 @@ async def run_task(
     task.status = "running"
     task.last_run_at = datetime.now()
     task.error_message = None
-    await db.flush()
+    await db.commit()
 
     # 通过BackgroundTasks异步触发爬虫执行
     background_tasks.add_task(_execute_crawl_task, task_id)

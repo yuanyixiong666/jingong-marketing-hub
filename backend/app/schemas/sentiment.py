@@ -15,6 +15,7 @@ class SentimentOut(BaseModel):
     content: Optional[str] = None
     sentiment: Optional[str] = "neutral"
     sentiment_score: Optional[float] = 0.0
+    source_url: Optional[str] = None
     published_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
 
