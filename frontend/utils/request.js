@@ -28,11 +28,13 @@ const request = (options) => {
       success: (res) => {
         if (!silent) {
           requestCount--
-          if (requestCount <= 0) { requestCount = 0; uni.hideLoading() }
+          if (requestCount <= 0) { requestCount = 0 }
         }
         if (res.statusCode === 200) {
+          if (!silent && requestCount === 0) uni.hideLoading()
           resolve(res.data)
         } else {
+          if (!silent && requestCount === 0) uni.hideLoading()
           uni.showToast({ title: "请求失败", icon: "none" })
           reject(res)
         }
@@ -40,8 +42,9 @@ const request = (options) => {
       fail: (err) => {
         if (!silent) {
           requestCount--
-          if (requestCount <= 0) { requestCount = 0; uni.hideLoading() }
+          if (requestCount <= 0) { requestCount = 0 }
         }
+        if (!silent && requestCount === 0) uni.hideLoading()
         uni.showToast({ title: "网络异常", icon: "none" })
         reject(err)
       },

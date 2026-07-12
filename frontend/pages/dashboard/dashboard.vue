@@ -8,23 +8,13 @@
     <!-- 图表1: 柱状图 - 各平台数据量对比 -->
     <view class="card chart-card">
       <text class="card-title">各平台数据量对比</text>
-      <EcCanvas
-        canvasId="barChart"
-        :width="340"
-        :height="260"
-        :ec="{ onInit: initBarChart }"
-      />
+      <EcCanvas canvasId="barChart" :width="340" :height="260" :ec="barEc" />
     </view>
 
     <!-- 图表2: 饼图 - 舆情情感分布 -->
     <view class="card chart-card">
       <text class="card-title">舆情情感分布</text>
-      <EcCanvas
-        canvasId="pieChart"
-        :width="340"
-        :height="280"
-        :ec="{ onInit: initPieChart }"
-      />
+      <EcCanvas canvasId="pieChart" :width="340" :height="280" :ec="pieEc" />
       <view class="sentiment-summary">
         <text class="summary-text">共 {{ totalSentiment }} 条舆情，正面占比 {{ positivePercent }}%</text>
       </view>
@@ -33,23 +23,13 @@
     <!-- 图表3: 折线图 - 关键词情感趋势 -->
     <view class="card chart-card">
       <text class="card-title">关键词情感分布</text>
-      <EcCanvas
-        canvasId="lineChart"
-        :width="340"
-        :height="280"
-        :ec="{ onInit: initLineChart }"
-      />
+      <EcCanvas canvasId="lineChart" :width="340" :height="280" :ec="lineEc" />
     </view>
 
     <!-- 图表4: 柱状图 - 平台互动量 -->
     <view class="card chart-card">
       <text class="card-title">各平台互动量</text>
-      <EcCanvas
-        canvasId="barChart2"
-        :width="340"
-        :height="260"
-        :ec="{ onInit: initEngagementChart }"
-      />
+      <EcCanvas canvasId="barChart2" :width="340" :height="260" :ec="engagementEc" />
     </view>
   </view>
 </template>
@@ -76,6 +56,10 @@ export default {
   data() {
     return {
       charts: {},
+      barEc: { onInit: null },
+      pieEc: { onInit: null },
+      lineEc: { onInit: null },
+      engagementEc: { onInit: null },
       barChartData: { categories: [], series: [] },
       pieChartData: { pieData: [] },
       lineChartData: { categories: [], series: [] },
@@ -83,6 +67,13 @@ export default {
       totalSentiment: 0,
       positivePercent: 0,
     }
+  },
+  created() {
+    // 在 created 中绑定方法，避免模板中箭头函数导致无限重渲染
+    this.barEc.onInit = this.initBarChart.bind(this)
+    this.pieEc.onInit = this.initPieChart.bind(this)
+    this.lineEc.onInit = this.initLineChart.bind(this)
+    this.engagementEc.onInit = this.initEngagementChart.bind(this)
   },
   onShow() {
     this.loadData()
