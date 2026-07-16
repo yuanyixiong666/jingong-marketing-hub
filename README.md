@@ -73,7 +73,7 @@ mysql -u root -p jingong_marketing < sql/seed_sentiment.sql
 cd backend
 pip install -r requirements.txt
 cp .env.example .env  # 编辑配置，填入数据库密码和 DashScope API Key
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 ### 3. 运行爬虫
