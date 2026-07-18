@@ -90,6 +90,7 @@ export default {
         { name: "小红书", icon: "X", count: 0, percent: 0 },
         { name: "天猫", icon: "T", count: 0, percent: 0 },
         { name: "京东", icon: "J", count: 0, percent: 0 },
+        { name: "微博", icon: "W", count: 0, percent: 0 },
       ],
       tasks: [],
       negativeCount: 0,
