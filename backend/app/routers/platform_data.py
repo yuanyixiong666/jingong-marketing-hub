@@ -93,7 +93,7 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         for r in rows
     ]
 
-    # 写入 Redis 缓存，5 分钟过期
-    await RedisCache.set(cache_key, stats, ttl=300)
+    # 写入 Redis 缓存，60 秒过期
+    await RedisCache.set(cache_key, stats, ttl=60)
 
     return ResponseModel(data=stats)

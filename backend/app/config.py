@@ -39,7 +39,7 @@ class Settings(BaseSettings):
         return self.DASHSCOPE_BASE_URL
 
     # API服务地址（爬虫管道等模块统一使用此配置）
-    API_BASE_URL: str = "http://localhost:8000"
+    API_BASE_URL: str = "http://localhost:8001"
 
     # API认证密钥（配置后所有接口需要携带 X-API-Key 请求头，留空则不认证）
     API_AUTH_KEY: str = ""

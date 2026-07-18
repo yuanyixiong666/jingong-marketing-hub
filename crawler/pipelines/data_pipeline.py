@@ -14,7 +14,7 @@ try:
     from backend.app.config import settings
     DEFAULT_API_URL = settings.API_BASE_URL
 except Exception:
-    DEFAULT_API_URL = "http://localhost:8000"
+    DEFAULT_API_URL = "http://localhost:8001"
 
 
 class DataPipeline:
