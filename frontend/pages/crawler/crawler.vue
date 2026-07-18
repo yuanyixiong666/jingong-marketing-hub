@@ -46,11 +46,11 @@
     <view class="card">
       <text class="card-title">数据质量概览</text>
       <view class="quality-grid">
-        <view class="quality-item">
+        <view class="quality-item" @click="goAllData">
           <text class="quality-value">{{ totalData }}</text>
           <text class="quality-label">总数据量</text>
         </view>
-        <view class="quality-item">
+        <view class="quality-item" @click="goPlatformList">
           <text class="quality-value">{{ platforms.length }}</text>
           <text class="quality-label">接入平台</text>
         </view>
@@ -152,6 +152,19 @@ export default {
     goTask(id) {
       uni.navigateTo({ url: `/pages/task/task?id=${id}` })
     },
+    goAllData() {
+      uni.navigateTo({ url: "/pages/platform-data/platform-data" })
+    },
+    goPlatformList() {
+      // 展示平台数据最多的那个平台
+      if (this.platforms.length > 0) {
+        const top = this.platforms.reduce((a, b) => (a.total > b.total ? a : b))
+        const nameMap = { douyin: "抖音", xiaohongshu: "小红书", tmall: "天猫", jd: "京东", weibo: "微博" }
+        const iconMap = { douyin: "D", xiaohongshu: "X", tmall: "T", jd: "J", weibo: "W" }
+        const name = nameMap[top.platform] || top.platform
+        uni.navigateTo({ url: `/pages/platform-data/platform-data?name=${encodeURIComponent(name)}&icon=${iconMap[top.platform] || "P"}` })
+      }
+    },
     formatTime(t) {
       if (!t) return "未执行"
       return new Date(t).toLocaleString()
@@ -235,6 +248,10 @@ export default {
   padding: 20rpx;
   background: #f8fafc;
   border-radius: 12rpx;
+}
+.quality-item:active {
+  background: #e2e8f0;
+  transform: scale(0.97);
 }
 .quality-value { display: block; font-size: 40rpx; font-weight: 700; color: #2c5282; }
 .quality-label { display: block; font-size: 24rpx; color: #999; margin-top: 8rpx; }

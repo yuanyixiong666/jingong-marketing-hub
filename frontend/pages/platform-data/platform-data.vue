@@ -81,9 +81,13 @@ export default {
     }
   },
   async onLoad(options) {
-    this.platformName = decodeURIComponent(options.name || "未知平台")
+    this.platformName = options.name ? decodeURIComponent(options.name) : ""
     this.platformIcon = options.icon || "P"
-    this.platformKey = this.nameToKey[this.platformName] || this.platformName
+    this.platformKey = this.platformName ? (this.nameToKey[this.platformName] || this.platformName) : ""
+    if (!this.platformName) {
+      this.platformName = "全部平台"
+      this.platformIcon = "A"
+    }
     await this.fetchData()
   },
   methods: {
@@ -91,11 +95,9 @@ export default {
       if (this.loading) return
       this.loading = true
       try {
-        const res = await getPlatformData({
-          platform: this.platformKey,
-          page: this.page,
-          page_size: this.pageSize,
-        })
+        const params = { page: this.page, page_size: this.pageSize }
+        if (this.platformKey) params.platform = this.platformKey
+        const res = await getPlatformData(params)
         if (res.code === 200) {
           this.dataList = res.data || []
           this.total = res.total || 0
@@ -112,11 +114,9 @@ export default {
       this.page++
       try {
         this.loading = true
-        const res = await getPlatformData({
-          platform: this.platformKey,
-          page: this.page,
-          page_size: this.pageSize,
-        })
+        const params = { page: this.page, page_size: this.pageSize }
+        if (this.platformKey) params.platform = this.platformKey
+        const res = await getPlatformData(params)
         if (res.code === 200) {
           this.dataList = this.dataList.concat(res.data || [])
           this.hasMore = this.page * this.pageSize < this.total
